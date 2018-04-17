@@ -1,0 +1,64 @@
+{
+    "name": "bbrothers/muzzle",
+    "type": "library",
+    "description": "Guzzle Assertions on Requests and Responses",
+    "keywords": [
+        "bbrothers",
+        "muzzle",
+        "guzzle",
+        "assertions",
+        "http testing"
+    ],
+    "homepage": "https://github.com/bbrothers/muzzle",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Brad Brothers",
+            "email": "brad@bradbrothers.ca",
+            "homepage": "https://github.com/bbrothers",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "~7.1",
+        "guzzlehttp/guzzle": "^6.3",
+        "illuminate/support": "^5.5",
+        "myclabs/php-enum": "^1.5",
+        "phpunit/phpunit": "^7.1",
+        "symfony/var-dumper": "^4.0"
+    },
+    "require-dev": {
+        "squizlabs/php_codesniffer": "^2.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "Muzzle\\": "src"
+        },
+        "files" : [
+            "src/functions.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Muzzle\\": "tests"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "check-style": "phpcs -p --colors --standard=PSR2 --runtime-set ignore_errors_on_exit 1 --runtime-set ignore_warnings_on_exit 1 src tests",
+        "fix-style": "phpcbf -p --colors --standard=PSR2 --runtime-set ignore_errors_on_exit 1 --runtime-set ignore_warnings_on_exit 1 src tests"
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "redesign"
+        },
+        "laravel": {
+            "providers": [
+                "Muzzle\\MuzzleProvider"
+            ]
+        }
+    }
+}
