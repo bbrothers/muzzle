@@ -49,4 +49,17 @@ class MuzzleTest extends TestCase
         $client->post('https://example.com')->assertStatus(HttpStatus::CREATED);
         $client->get('https://example.com?foo=bar&baz=qux')->assertStatus(HttpStatus::OK);
     }
+
+    /** @test */
+    public function itAllowsTheConfigurationToBeUpdatedWithoutLosingTheReference()
+    {
+
+        $client = Muzzle::make(['base_uri' => 'https://example.com']);
+        $this->assertEquals('https://example.com', $client->getConfig('base_uri'));
+
+        $updated = $client->updateConfig(['base_uri' => 'https://example.com/foo']);
+        $this->assertEquals('https://example.com/foo', $updated->getConfig('base_uri'));
+
+        $this->assertSame($updated, $client);
+    }
 }

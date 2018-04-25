@@ -64,7 +64,18 @@ class Muzzle implements ClientInterface
     public static function builder() : MuzzleBuilder
     {
 
-        return MuzzleBuilder::instance();
+        return new MuzzleBuilder;
+    }
+
+    public function updateConfig(array $config) : Muzzle
+    {
+
+        $this->client = new GuzzleClient(array_merge(
+            $this->client->getConfig(),
+            array_except($config, ['handler'])
+        ));
+
+        return $this;
     }
 
     public function makeAssertions() : void
