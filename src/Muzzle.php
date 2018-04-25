@@ -6,13 +6,10 @@ use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
-use MultipleIterator;
-use Muzzle\Assertions\AssertionsFactory;
+use Muzzle\Assertions\AssertionRules;
 use Muzzle\Messages\Transaction;
 use Muzzle\Middleware\Assertable;
 use Muzzle\Middleware\History;
-use PHPUnit\Framework\Assert as PHPUnit;
-use function GuzzleHttp\Psr7\parse_query;
 
 class Muzzle implements ClientInterface
 {
@@ -39,6 +36,7 @@ class Muzzle implements ClientInterface
      * @var Transactions
      */
     protected $transactions;
+    protected $assertionsHaveRun;
 
     public function __construct(array $options = [])
     {
@@ -72,7 +70,8 @@ class Muzzle implements ClientInterface
     public function makeAssertions() : void
     {
 
-        AssertionsFactory::new()->runAssertions($this->history(), $this->transactions);
+        $this->assertionsHaveRun = true;
+        AssertionRules::new($this)->runAssertions();
     }
 
     public function append(Transaction $transaction) : Muzzle
@@ -112,6 +111,8 @@ class Muzzle implements ClientInterface
     public function __destruct()
     {
 
-        $this->makeAssertions();
+        if (! $this->assertionsHaveRun) {
+            $this->makeAssertions();
+        }
     }
 }

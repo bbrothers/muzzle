@@ -11,8 +11,10 @@ class QueryContains implements Assertion
     public function assert(Transaction $actual, Transaction $expected) : void
     {
 
-        if ($actual->request()->getUri()->getQuery() !== '') {
-            $actual->request()->assertUriQueryContains(parse_query($expected->request()->getUri()->getQuery()));
+        if ($expected->request()->getUri()->getQuery() !== '') {
+            $actual->request()->assertUriQueryContains(
+                parse_query($expected->request()->getUri()->getQuery())
+            );
         }
     }
 }
