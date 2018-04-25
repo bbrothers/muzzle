@@ -5,8 +5,10 @@ namespace Muzzle\Messages;
 use ArrayAccess;
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
+use Prophecy\Promise\PromiseInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Throwable;
 
 class Transaction implements ArrayAccess
 {
@@ -44,10 +46,10 @@ class Transaction implements ArrayAccess
     }
 
     /**
-     * @param ResponseInterface $response
+     * @param ResponseInterface|PromiseInterface $response
      * @return Transaction
      */
-    public function setResponse(ResponseInterface $response) : Transaction
+    public function setResponse($response) : Transaction
     {
 
         $this->response = $response;
@@ -66,19 +68,19 @@ class Transaction implements ArrayAccess
     }
 
     /**
-     * @return ResponseInterface|AssertableResponse
+     * @return ResponseInterface|AssertableResponse|PromiseInterface
      */
-    public function response() : ?ResponseInterface
+    public function response()
     {
 
         return $this->response;
     }
 
     /**
-     * @param Exception $error
+     * @param Throwable $error
      * @return Transaction
      */
-    public function setError(Exception $error) : Transaction
+    public function setError(Throwable $error) : Transaction
     {
 
         $this->error = $error;
