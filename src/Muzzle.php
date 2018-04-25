@@ -52,15 +52,10 @@ class Muzzle implements ClientInterface
         Container::push($this);
     }
 
-    public static function fromTransactions(Transactions $transactions, array $options = []) : Muzzle
+    public static function make(array $options = []) : Muzzle
     {
 
-        $instance = new static($options);
-        foreach ($transactions as $transaction) {
-            $instance->append($transaction);
-        }
-
-        return $instance;
+        return new static($options);
     }
 
     public static function builder() : MuzzleBuilder
@@ -87,12 +82,14 @@ class Muzzle implements ClientInterface
         AssertionRules::new($this)->runAssertions();
     }
 
-    public function append(Transaction $transaction) : Muzzle
+    public function append(Transaction ...$transactions) : Muzzle
     {
 
-        $this->transactions->push($transaction);
+        foreach ($transactions as $transaction) {
+            $this->transactions->push($transaction);
 
-        $this->handler->append($transaction->response() ?: $transaction->error());
+            $this->handler->append($transaction->response() ?: $transaction->error());
+        }
 
         return $this;
     }
@@ -103,6 +100,14 @@ class Muzzle implements ClientInterface
         foreach ($middlewares as $middleware) {
             $this->stack->push($middleware);
         }
+
+        return $this;
+    }
+
+    public function removeMiddleware(string $middleware) : Muzzle
+    {
+
+        $this->stack->remove($middleware);
 
         return $this;
     }
@@ -119,6 +124,12 @@ class Muzzle implements ClientInterface
     {
 
         return $this->history;
+    }
+
+    public function expectations() : Transactions
+    {
+
+        return $this->transactions;
     }
 
     public function __destruct()

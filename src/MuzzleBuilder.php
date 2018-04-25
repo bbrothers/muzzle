@@ -24,11 +24,6 @@ class MuzzleBuilder
 {
 
     /**
-     * @var MuzzleBuilder
-     */
-    private static $instance;
-
-    /**
      * @var array
      */
     private $options = [];
@@ -36,33 +31,42 @@ class MuzzleBuilder
     /**
      * @var Transactions
      */
-    private $transactions;
+    private $expectations;
+
+    /**
+     * @var callable[]
+     */
+    private $middleware = [];
 
     /**
      * @var RequestBuilder
      */
     private $building;
 
-    private function __construct(Transactions $transactions = null)
+    public function __construct(Transactions $expectations = null)
     {
 
-        $this->transactions = $transactions ?: new Transactions;
+        $this->expectations = $expectations ?: new Transactions;
     }
 
-    public static function instance(Transactions $transactions = null) : MuzzleBuilder
+    public static function create(Transactions $transactions = null) : MuzzleBuilder
     {
 
-        if (! static::$instance) {
-            static::$instance = new static($transactions);
-        }
-
-        return static::$instance;
+        return new static($transactions);
     }
 
-    public function withOptions(array $options) : self
+    public function withOptions(array $options) : MuzzleBuilder
     {
 
         $this->options = array_merge($this->options, $options);
+
+        return $this;
+    }
+
+    public function withMiddleware(callable ...$middleware) : MuzzleBuilder
+    {
+
+        $this->middleware = array_merge($this->middleware, $middleware);
 
         return $this;
     }
@@ -79,7 +83,7 @@ class MuzzleBuilder
         $transaction->setRequest($request instanceof RequestBuilder ? $request->build() : $request);
         $transaction->setResponseOrError($response instanceof ResponseBuilder ? $response->build() : $response);
 
-        $this->transactions->push($transaction);
+        $this->expectations->push($transaction);
 
         return $this;
     }
@@ -101,13 +105,14 @@ class MuzzleBuilder
 
         if ($this->building) {
             $this->enqueue($this->building, $this->building->reply());
-            unset($this->building);
+            $this->building = null;
         }
         $this->withOptions($options);
 
-        static::$instance = null;
 
-        return Muzzle::fromTransactions($this->transactions, $this->options);
+        return Muzzle::make($options)
+                     ->append(...$this->expectations)
+                     ->addMiddleware(...$this->middleware);
     }
 
     public function replace(array $options = []) : Muzzle
@@ -115,8 +120,11 @@ class MuzzleBuilder
 
         $muzzle = $this->build($options);
 
-        if (function_exists('app')) {
-            app()->instance(ClientInterface::class, $muzzle);
+        if (function_exists('app') or function_exists(__NAMESPACE__ . '\\app')) {
+            app()->extend(ClientInterface::class, function ($guzzle) use ($muzzle) {
+
+                return $muzzle->updateConfig($guzzle->getConfig());
+            });
         }
 
         return $muzzle;
