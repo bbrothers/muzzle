@@ -3,6 +3,8 @@
 namespace Muzzle;
 
 use GuzzleHttp\Psr7\Response;
+use Muzzle\Messages\JsonFixture;
+use Psr\Http\Message\ResponseInterface;
 
 class ResponseBuilder
 {
@@ -38,10 +40,11 @@ class ResponseBuilder
         $this->body = $body;
     }
 
-    public static function fromFixture(string $fixture, int $status = HttpStatus::OK, array $headers = []) : Response
+    public static function fromFixture(string $fixture, int $status = HttpStatus::OK, array $headers = []) : ResponseInterface
     {
 
-        return (new static($status, $headers))->setBodyFromFixture($fixture)->build();
+        $builder = (new static($status, $headers))->setBodyFromFixture($fixture);
+        return new JsonFixture($builder->status, $builder->headers, $builder->body);
     }
 
 

@@ -13,23 +13,82 @@ An experiment into the usefulness of assertions on Guzzle Requests and Responses
 
 Via Composer
 
-``` bash
+```bash
 $ composer require bbrothers/muzzle
 ```
 
 ## Usage
 
-``` php
+Use the fluent builder to define a set of expected requests and mock responses:
+```php
 $client = Muzzle::builder()
-                ->post('https://example.com')
-                ->replyWith(new Response(201))
-                ->get('https://example.com')
+                ->post('https://example.com/contact')
+                ->setBody(json_encode(['name' => 'Jane Doe'])
+                ->replyWith(new Response(HttpStatus::CREATED))
+                ->get('https://example.com/contact')
+                ->setQuery(['name' => 'Jane Doe'])
                 ->build();
 
-$this->assertInstanceOf(HttPhake::class, $client);
-$client->post('https://example.com')->assertStatus(HttpStatus::CREATED);
-$client->get('https://example.com')->assertStatus(HttpStatus::OK);
+$this->assertInstanceOf(Muzzle::class, $client);
+$client->post('https://example.com');
+$client->get('https://example.com');
 ```
+If not specified, requests will default to a `GET` with an empty URI and responses will default to an empty `200`.
+
+The `enqueue` method can be used to pass pre-built requests/responses:
+```php
+$request = new \GuzzleHttp\Psr7\Request(HttpMethod::GET, '/foo');
+$response = new \GuzzleHttp\Psr7\Response(HttpStatus::BAD_REQUEST);
+
+$client = Muzzle::builder()->enqueue($request, $response);
+```
+
+Expectations can also be added directly to the `Muzzle` instance by using the `append` method:
+```php
+$client = new Muzzle;
+$transactions = [];
+for ($i = 0; $i < 10; $i++) {
+    $transactions[] = (new Transaction)
+        ->setRequest((new RequestBuilder)->setQuery(['number' => $i])->build())
+        ->setResponse((new ResponseBuilder)->setBody(json_encode(['message' => "{$i} of 10"])->build());
+}
+$client->append(...$transactions);
+```
+
+By default `Muzzle` will run its assertions on destruct at the end of a test. If you'd like to run them manually
+you can call the `makeAssertions` method. `Muzzle` also stores a reference to all instances in the `Container` class. 
+If the `Muzzle` instance is being held outside of the test (such as in Laravel's container), the `__destruct` method
+may be called too late in the tear-down process to register a failed test. To remedy this, we can have the `Continer`
+run all assertions on `tearDown`:
+```php
+public function tearDown() {
+    Container::makeAssertions();
+    parent::tearDown();
+}
+``` 
+The container can also be cleared without running assertions using the `Container::flush` method.
+
+By default `Muzzle` will run assertions that:
+- assert all expected requests were made
+- assert the expected request URI matches the actual request URI (including a configured `base_uri`)
+- assert the expected request method matches the actual request method
+- assert the expected request query (if provided) is contained in the actual request query
+- assert the expected request body (if provided) matches the actual request body
+- assert the expected request headers (if provided) are contained in the actual request headers
+
+Custom assertion rules can be added by implementing the `Assertion` interface and using `AssertionRules::push` or 
+`AssertionRules::unshift` to append or prepend the rule to the queue. The rules can be overwritten completely by calling the `AssertionRules::setAssertions` with a variadic list of rules:
+```php
+class JsonContains implements Assertion {
+   public function assert(Transaction $actual, Transaction $expected) : void
+   {
+        $actual->response()->assertJson($expected->response()->json());
+   }
+}
+// then
+
+AssertionRules::push(JsonContains::class);
+``` 
 
 ## Change log
 
@@ -37,7 +96,7 @@ Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed re
 
 ## Testing
 
-``` bash
+```bash
 $ composer test
 ```
 
