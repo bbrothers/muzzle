@@ -48,6 +48,8 @@ class Muzzle implements ClientInterface
         $this->setHistory(new Transactions);
         $this->stack->push(new Assertable, 'assertable');
         $this->stack->push(new History($this->history()), 'history');
+
+        Container::push($this);
     }
 
     public static function fromTransactions(Transactions $transactions, array $options = []) : Muzzle
