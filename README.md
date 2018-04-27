@@ -90,6 +90,23 @@ class JsonContains implements Assertion {
 AssertionRules::push(JsonContains::class);
 ``` 
 
+Additional assertions can also be run on any responses from `Muzzle` or on requests/responses from the transaction history:
+```php
+$client = Muzzle::builder()
+                ->post('https://example.com/contact')
+                ->setBody(json_encode(['name' => 'Jane Doe'])
+                ->replyWith(new Response(HttpStatus::CREATED))
+                ->get('http://example.com/contact')
+                ->setQuery(['name' => 'Jane Doe'])
+                ->build();
+
+$this->assertInstanceOf(Muzzle::class, $client);
+$client->post('https://example.com/contact')->assertSuccessful();
+$client->get('http://example.com/contact')->assertRedirect('https://example.com/contact');
+
+$client->histroy()->last()->request()->assertUriQueryNotHasKey('age');
+```
+
 ## Change log
 
 Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
