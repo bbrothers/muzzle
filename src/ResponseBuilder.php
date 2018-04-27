@@ -40,8 +40,11 @@ class ResponseBuilder
         $this->body = $body;
     }
 
-    public static function fromFixture(string $fixture, int $status = HttpStatus::OK, array $headers = []) : ResponseInterface
-    {
+    public static function fromFixture(
+        string $fixture,
+        int $status = HttpStatus::OK,
+        array $headers = []
+    ) : ResponseInterface {
 
         $builder = (new static($status, $headers))->setBodyFromFixture($fixture);
         return new JsonFixture($builder->status, $builder->headers, $builder->body);

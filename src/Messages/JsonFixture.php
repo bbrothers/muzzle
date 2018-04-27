@@ -4,10 +4,10 @@ namespace Muzzle\Messages;
 
 use ArrayAccess;
 use GuzzleHttp\Psr7\Response;
-use function GuzzleHttp\Psr7\stream_for;
 use Illuminate\Support\Arr;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
+use function GuzzleHttp\Psr7\stream_for;
 
 class JsonFixture implements ResponseInterface, ArrayAccess
 {
@@ -26,7 +26,7 @@ class JsonFixture implements ResponseInterface, ArrayAccess
      * @param array $headers                             Response headers
      * @param string|null|resource|StreamInterface $body Response body
      * @param string $version                            Protocol version
-     * @param string|null $reason                        Reason phrase (when empty a default will be used based on the status code)
+     * @param string|null $reason                        Reason phrase
      */
     public function __construct(
         $status = 200,
@@ -101,6 +101,7 @@ class JsonFixture implements ResponseInterface, ArrayAccess
      */
     public function offsetExists($offset) : bool
     {
+
         return $this->has($offset);
     }
 
@@ -109,6 +110,7 @@ class JsonFixture implements ResponseInterface, ArrayAccess
      */
     public function offsetGet($offset)
     {
+
         return $this->get($offset);
     }
 

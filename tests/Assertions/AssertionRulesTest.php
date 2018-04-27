@@ -51,7 +51,8 @@ class AssertionRulesTest extends TestCase
 
         $this->expectException(InvalidArgumentException::class);
 
-        AssertionRules::setAssertions(get_class(new class {}));
+        AssertionRules::setAssertions(get_class(new class {
+        }));
     }
 
     /**
