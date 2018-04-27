@@ -19,7 +19,7 @@ class Container
     public static function makeAssertions() : void
     {
 
-        while(count(static::$container)) {
+        while (count(static::$container)) {
             $muzzle = array_pop(static::$container);
             $muzzle->makeAssertions();
             unset($muzzle);
