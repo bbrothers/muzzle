@@ -11,6 +11,13 @@ use PHPUnit\Framework\TestCase;
 class MuzzleTest extends TestCase
 {
 
+    public function tearDown()
+    {
+
+        Container::flush();
+        parent::tearDown();
+    }
+
     /** @test */
     public function itCanCreateAClientInstanceWithAMockHandler()
     {

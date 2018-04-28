@@ -40,6 +40,12 @@ class JsonFixture implements ResponseInterface, ArrayAccess
         $this->withBody($this->response->getBody());
     }
 
+    public static function fromResponse(ResponseInterface $response) : JsonFixture
+    {
+
+        return new static($response->getStatusCode(), $response->getHeaders(), $response->getBody());
+    }
+
     public function getBody()
     {
 

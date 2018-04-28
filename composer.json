@@ -28,6 +28,7 @@
         "symfony/var-dumper": "^4.0"
     },
     "require-dev": {
+        "php-vfs/php-vfs": "^1.4",
         "squizlabs/php_codesniffer": "^2.3"
     },
     "autoload": {

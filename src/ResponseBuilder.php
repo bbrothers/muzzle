@@ -3,6 +3,7 @@
 namespace Muzzle;
 
 use GuzzleHttp\Psr7\Response;
+use Muzzle\Messages\DecodableResponse;
 use Muzzle\Messages\JsonFixture;
 use Psr\Http\Message\ResponseInterface;
 
@@ -23,7 +24,7 @@ class ResponseBuilder
      */
     private $headers;
     /**
-     * @var null
+     * @var string|null|resource|\Psr\Http\Message\StreamInterface
      */
     private $body;
 
@@ -46,8 +47,15 @@ class ResponseBuilder
         array $headers = []
     ) : ResponseInterface {
 
-        $builder = (new static($status, $headers))->setBodyFromFixture($fixture);
-        return new JsonFixture($builder->status, $builder->headers, $builder->body);
+        return (new static($status, $headers))
+            ->setBodyFromFixture($fixture)
+            ->toJsonFixture();
+    }
+
+    public function toJsonFixture() : JsonFixture
+    {
+
+        return new JsonFixture($this->status, $this->headers, $this->body);
     }
 
 
@@ -90,9 +98,14 @@ class ResponseBuilder
         return $this;
     }
 
-    public function build() : Response
+    /**
+     * @return ResponseInterface|DecodableResponse
+     */
+    public function build() : ResponseInterface
     {
 
-        return new Response($this->status, $this->headers, $this->body);
+        $response = new Response($this->status, $this->headers, $this->body);
+
+        return new DecodableResponse($response);
     }
 }
