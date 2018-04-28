@@ -2,12 +2,22 @@
 
 namespace Muzzle\Messages;
 
+use GuzzleHttp\Psr7\Response;
 use Muzzle\HttpMethod;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\StreamInterface;
 
 class JsonFixtureTest extends TestCase
 {
+
+
+    /** @test */
+    public function itCanBeCreatedFromAResponseInstance()
+    {
+
+        $fixture = JsonFixture::fromResponse(new Response);
+        $this->assertInstanceOf(JsonFixture::class, $fixture);
+    }
 
     /** @test */
     public function itMakesTheBodyOfAJsonResponseArrayAccessible()
