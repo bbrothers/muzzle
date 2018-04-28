@@ -2,7 +2,7 @@
 
 namespace Muzzle;
 
-use Exception;
+use Throwable;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Uri;
 use Psr\Http\Message\ResponseInterface;
@@ -26,7 +26,7 @@ class RequestBuilder
      */
     private $headers;
     /**
-     * @var string
+     * @var string|null|resource|\Psr\Http\Message\StreamInterface
      */
     private $body;
     /**
@@ -34,7 +34,7 @@ class RequestBuilder
      */
     private $query = [];
     /**
-     * @var ResponseBuilder|\Psr\Http\Message\ResponseInterface
+     * @var ResponseBuilder|\Psr\Http\Message\ResponseInterface|Throwable
      */
     private $reply;
 
@@ -103,7 +103,7 @@ class RequestBuilder
     }
 
     /**
-     * @param ResponseBuilder|ResponseInterface|Exception $reply
+     * @param ResponseBuilder|ResponseInterface|Throwable $reply
      * @return RequestBuilder
      */
     public function replyWith($reply = null) : RequestBuilder

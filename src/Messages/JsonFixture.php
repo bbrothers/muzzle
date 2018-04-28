@@ -103,7 +103,7 @@ class JsonFixture implements ResponseInterface, ArrayAccess
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function offsetExists($offset) : bool
     {
@@ -112,7 +112,7 @@ class JsonFixture implements ResponseInterface, ArrayAccess
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function offsetGet($offset)
     {
@@ -121,7 +121,7 @@ class JsonFixture implements ResponseInterface, ArrayAccess
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function offsetSet($offset, $value) : void
     {
@@ -130,7 +130,7 @@ class JsonFixture implements ResponseInterface, ArrayAccess
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function offsetUnset($offset)
     {

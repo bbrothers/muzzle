@@ -4,6 +4,9 @@ namespace Muzzle;
 
 use Illuminate\Support\ServiceProvider;
 
+/**
+ * @codeCoverageIgnore
+ */
 class MuzzleProvider extends ServiceProvider
 {
 

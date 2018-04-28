@@ -24,13 +24,7 @@ class Transactions implements ArrayAccess, IteratorAggregate, Countable
     }
 
 
-    /**
-     * Push an item onto the end of the collection.
-     *
-     * @param  mixed $value
-     * @return $this
-     */
-    public function push($value) : Transactions
+    public function push(Transaction $value) : Transactions
     {
 
         $this->offsetSet(null, $value);

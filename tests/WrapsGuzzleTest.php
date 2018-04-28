@@ -2,6 +2,7 @@
 
 namespace Muzzle;
 
+use BadMethodCallException;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Promise\Promise;
@@ -12,7 +13,7 @@ use OutOfBoundsException;
 use PHPUnit\Framework\AssertionFailedError;
 use PHPUnit\Framework\TestCase;
 
-class GuzzleWrapTest extends TestCase
+class WrapsGuzzleTest extends TestCase
 {
 
     /** @test */

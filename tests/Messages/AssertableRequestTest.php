@@ -2,6 +2,7 @@
 
 namespace Muzzle\Messages;
 
+use GuzzleHttp\Psr7\Uri;
 use Muzzle\HttpMethod;
 use GuzzleHttp\Psr7\Request;
 use PHPUnit\Framework\ExpectationFailedException;
@@ -211,5 +212,17 @@ class AssertableRequestTest extends TestCase
 
         $this->expectException(ExpectationFailedException::class);
         $request->assertUriQueryContains(['foo']);
+    }
+
+    /** @test */
+    public function itCanAssertThatRequestUriMatchesAProvidedUri()
+    {
+
+        $request = new AssertableRequest(new Request(HttpMethod::GET, 'https://example.com'));
+
+        $request->assertUriEquals(new Uri('https://example.com'));
+
+        $this->expectException(ExpectationFailedException::class);
+        $request->assertUriPath('https://example.org');
     }
 }

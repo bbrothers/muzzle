@@ -2,6 +2,7 @@
 
 namespace Muzzle;
 
+use BadMethodCallException;
 use GuzzleHttp\Promise\PromiseInterface;
 use Muzzle\Messages\AssertableResponse;
 use OutOfBoundsException;
@@ -31,7 +32,7 @@ trait WrapsGuzzle
 {
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function send(RequestInterface $request, array $options = []) : ResponseInterface
     {
@@ -40,7 +41,7 @@ trait WrapsGuzzle
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function sendAsync(RequestInterface $request, array $options = []) : PromiseInterface
     {
@@ -49,7 +50,7 @@ trait WrapsGuzzle
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function request($method, $uri, array $options = []) : ResponseInterface
     {
@@ -58,7 +59,7 @@ trait WrapsGuzzle
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function requestAsync($method, $uri, array $options = []) : PromiseInterface
     {
@@ -67,7 +68,7 @@ trait WrapsGuzzle
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getConfig($option = null)
     {
@@ -94,5 +95,5 @@ trait WrapsGuzzle
                 $dumper->dump((new VarCloner)->cloneVar($arguments), true)
             ));
         }
-    }
+    } // @codeCoverageIgnore
 }
