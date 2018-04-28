@@ -2,6 +2,7 @@
 
 namespace Muzzle\Messages;
 
+use BadMethodCallException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 
@@ -19,13 +20,7 @@ trait ResponseDecorator
         $this->response = $response;
     }
 
-    /**
-     * Create a new AssertableResponse from another response.
-     *
-     * @param  ResponseInterface $response
-     * @return self
-     */
-    public static function fromBaseResponse($response)
+    public static function fromBaseResponse(ResponseInterface $response) : ResponseInterface
     {
 
         if ($response instanceof static) {
@@ -182,7 +177,7 @@ trait ResponseDecorator
             return $response;
         }
 
-        throw new \BadMethodCallException("The method \"$method\" is not defined.");
+        throw new BadMethodCallException("The method [{$method}] is not defined.");
     }
 
     /**
