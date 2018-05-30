@@ -14,13 +14,6 @@ use PHPUnit\Framework\TestCase;
 class MuzzleTest extends TestCase
 {
 
-    public function tearDown()
-    {
-
-        Container::flush();
-        parent::tearDown();
-    }
-
     /** @test */
     public function itCanCreateAClientInstanceWithAMockHandler()
     {
@@ -91,15 +84,15 @@ class MuzzleTest extends TestCase
     }
 
     /** @test */
-    public function itRunsAssertionsOnDestruct()
+    public function itCanFlushTheContainer()
     {
 
         $client = Muzzle::builder()->get('https://example.com')->build();
 
         $client->post('https://foo.com', []);
 
-        $this->expectException(ExpectationFailedException::class);
-        Container::flush();
-        unset($client);
+        $client->flush();
+
+        $this->assertEmpty(Muzzle::container());
     }
 }

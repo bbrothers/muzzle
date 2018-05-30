@@ -252,6 +252,7 @@ trait ContentAssertions
      * Dump the content from the response.
      *
      * @return void
+     * @codeCoverageIgnore
      */
     public function dump() : void
     {

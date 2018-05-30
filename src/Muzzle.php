@@ -17,6 +17,10 @@ class Muzzle implements ClientInterface
     use WrapsGuzzle;
 
     /**
+     * @var Container
+     */
+    protected static $container;
+    /**
      * @var Transactions
      */
     protected $history;
@@ -49,7 +53,7 @@ class Muzzle implements ClientInterface
         $this->stack->push(new Assertable, 'assertable');
         $this->stack->push(new History($this->history()), 'history');
 
-        Container::push($this);
+        static::container()->push($this);
     }
 
     public static function make(array $options = []) : Muzzle
@@ -132,11 +136,35 @@ class Muzzle implements ClientInterface
         return $this->transactions;
     }
 
-    public function __destruct()
+    public static function container() : Container
     {
 
-        if (! $this->assertionsHaveRun) {
-            $this->makeAssertions();
+        if (! static::$container) {
+            static::$container = new Container;
         }
+
+        return static::$container;
+    }
+
+    public static function close() : void
+    {
+
+        if (static::$container === null) {
+            return;
+        }
+
+        $container = self::$container;
+        self::$container = null;
+        $container->makeAssertions();
+    }
+
+    public static function flush() : void
+    {
+
+        if (static::$container !== null) {
+            static::$container->flush();
+        }
+
+        static::$container = new Container;
     }
 }

@@ -2,33 +2,41 @@
 
 namespace Muzzle;
 
-class Container
+use Countable;
+
+class Container implements Countable
 {
 
     /**
      * @var Muzzle[]
      */
-    protected static $container = [];
+    private $container = [];
 
-    public static function push(Muzzle $muzzle) : void
+    public function push(Muzzle $muzzle) : void
     {
 
-        static::$container[] = $muzzle;
+        $this->container[] = $muzzle;
     }
 
-    public static function makeAssertions() : void
+    public function makeAssertions() : void
     {
 
-        while (count(static::$container)) {
-            $muzzle = array_pop(static::$container);
+        while (count($this->container)) {
+            $muzzle = array_pop($this->container);
             $muzzle->makeAssertions();
             unset($muzzle);
         }
     }
 
-    public static function flush() : void
+    public function flush() : void
     {
 
-        static::$container = [];
+        $this->container = [];
+    }
+
+    public function count() : int
+    {
+
+        return count($this->container);
     }
 }

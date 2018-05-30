@@ -39,6 +39,6 @@ trait JsonMessage
             $this->json = json_decode($this->getBody(), true);
         }
 
-        return $this->json;
+        return $this->json ?: [];
     }
 }

@@ -32,7 +32,7 @@ class MuzzleBuilderTest extends TestCase
     {
 
         parent::tearDown();
-        Container::makeAssertions();
+        Muzzle::close();
     }
 
     /** @test */
