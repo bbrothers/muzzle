@@ -55,18 +55,15 @@ for ($i = 0; $i < 10; $i++) {
 $client->append(...$transactions);
 ```
 
-By default `Muzzle` will run its assertions on destruct at the end of a test. If you'd like to run them manually
-you can call the `makeAssertions` method. `Muzzle` also stores a reference to all instances in the `Container` class. 
-If the `Muzzle` instance is being held outside of the test (such as in Laravel's container), the `__destruct` method
-may be called too late in the tear-down process to register a failed test. To remedy this, we can have the `Continer`
-run all assertions on `tearDown`:
+`Muzzle` assertions should be run at the end of a test by calling the `makeAssertions` method.
+This can be automated by including the `MuzzleIntegration` trait in your test or base `TestCase` file. `Muzzle` stores a reference to all instances in the `Container` class, which allows us to call `Muzzle::close` to execute any outstanding assertions:
 ```php
-public function tearDown() {
-    Container::makeAssertions();
-    parent::tearDown();
+class TestCase extends PHPUnit\Framework\TestCase
+{
+    use Muzzle\PHPUnit\MuzzleIntegrations;
 }
 ``` 
-The container can also be cleared without running assertions using the `Container::flush` method.
+The container can also be cleared without running assertions using the `Muzzle::flush` method.
 
 By default `Muzzle` will run assertions that:
 - assert all expected requests were made

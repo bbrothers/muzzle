@@ -53,9 +53,6 @@
         "sort-packages": true
     },
     "extra": {
-        "branch-alias": {
-            "dev-master": "redesign"
-        },
         "laravel": {
             "providers": [
                 "Muzzle\\MuzzleProvider"
