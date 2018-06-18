@@ -14,7 +14,7 @@ class AssertionRules
         UriPathMatches::class,
         MethodMatches::class,
         QueryContains::class,
-        BodyMatches::class,
+        RequestContainsJson::class,
         HeadersMatch::class,
     ];
 

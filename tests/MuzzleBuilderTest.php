@@ -127,6 +127,30 @@ class MuzzleBuilderTest extends TestCase
     }
 
     /** @test */
+    public function itCanBuildARequestExpectationWithJson()
+    {
+
+        $client = MuzzleBuilder::create()
+                               ->setMethod(HttpMethod::GET())
+                               ->setUri('/')
+                               ->setJson(['json' => 'testing body'])
+                               ->withMiddleware(new Assertable)
+                               ->build();
+
+        $client->get('/', [
+            'json' => ['json' => 'testing body'],
+        ]);
+
+        $request = $client->expectations()->first()->request();
+
+
+        (new AssertableRequest($request))
+            ->assertMethod(HttpMethod::GET)
+            ->assertUriPath('/')
+            ->assertJson(['json' => 'testing body']);
+    }
+
+    /** @test */
     public function itUsesHttpMethodsToCreateRequestBuildersForTheGivenMethod()
     {
 

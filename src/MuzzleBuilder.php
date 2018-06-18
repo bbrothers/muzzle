@@ -172,6 +172,14 @@ class MuzzleBuilder
         return $this;
     }
 
+    public function setJson(array $body) : MuzzleBuilder
+    {
+
+        $this->builder()->setJson($body);
+
+        return $this;
+    }
+
     public function setQuery(array $query = []) : MuzzleBuilder
     {
 
