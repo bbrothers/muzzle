@@ -71,7 +71,15 @@ class AssertableRequest implements RequestInterface
     public function assertMethod(string $method)
     {
 
-        PHPUnit::assertEquals(strtoupper($method), $this->getMethod());
+        PHPUnit::assertEquals(
+            strtoupper($method),
+            $this->getMethod(),
+            sprintf(
+                'Expected HTTP method [%s]. Got [%s]',
+                strtoupper($method),
+                $this->getMethod()
+            )
+        );
 
         return $this;
     }
