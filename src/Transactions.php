@@ -3,7 +3,6 @@
 namespace Muzzle;
 
 use ArrayAccess;
-use ArrayIterator;
 use Countable;
 use Illuminate\Support\Arr;
 use IteratorAggregate;
@@ -12,17 +11,19 @@ use Muzzle\Messages\Transaction;
 class Transactions implements ArrayAccess, IteratorAggregate, Countable
 {
 
-    /**
-     * @var Transaction[]
-     */
-    private $transactions;
+    use ArrayAccessible;
 
     public function __construct(array $transactions = [])
     {
 
-        $this->transactions = $transactions;
-    }
+        foreach ($transactions as $transaction) {
+            if (! $transaction instanceof Transaction) {
+                throw NotATransaction::value($transaction);
+            }
+        }
 
+        $this->items = $transactions;
+    }
 
     public function push(Transaction $value) : Transactions
     {
@@ -32,95 +33,79 @@ class Transactions implements ArrayAccess, IteratorAggregate, Countable
         return $this;
     }
 
-    /**
-     * Get the last item from the collection.
-     *
-     * @param  callable|null $callback
-     * @param  mixed $default
-     * @return Transaction|mixed
-     */
-    public function last(callable $callback = null, $default = null)
+    public function prepend($value, $key = null) : Transactions
     {
 
-        return Arr::last($this->transactions, $callback, $default);
+        $this->items = Arr::prepend($this->items, $value, $key);
+
+        return $this;
     }
 
-    /**
-     * Get the first item from the collection.
-     *
-     * @param  callable|null $callback
-     * @param  mixed $default
-     * @return Transaction|mixed
-     */
-    public function first(callable $callback = null, $default = null)
+    public function last(callable $callback = null) : ?Transaction
     {
 
-        return Arr::first($this->transactions, $callback, $default);
+        return Arr::last($this->items, $callback);
+    }
+
+    public function first(callable $callback = null) : ?Transaction
+    {
+
+        return Arr::first($this->items, $callback);
+    }
+
+    public function map(callable $callback) : Transactions
+    {
+
+        $keys = array_keys($this->items);
+
+        $items = array_map($callback, $this->items, $keys);
+
+        return new static(array_combine($keys, $items));
+    }
+
+    public function filter(callable $callback) : Transactions
+    {
+
+        return new static(Arr::where($this->items, $callback));
+    }
+
+    public function get($key) : ?Transaction
+    {
+
+        if ($this->offsetExists($key)) {
+            return $this->items[$key];
+        }
+
+        return null;
+    }
+
+    public function has(...$keys) : bool
+    {
+
+        foreach ($keys as $value) {
+            if (! $this->offsetExists($value)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public function isEmpty() : bool
+    {
+
+        return empty($this->items);
+    }
+
+    public function isNotEmpty() : bool
+    {
+
+        return ! $this->isEmpty();
     }
 
     public function transactions() : array
     {
 
-        return $this->transactions;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getIterator() : ArrayIterator
-    {
-
-        return new ArrayIterator($this->transactions);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function offsetExists($offset) : bool
-    {
-
-        return isset($this->transactions[$offset]);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function offsetGet($offset)
-    {
-
-        return $this->transactions[$offset] ?? null;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function offsetSet($offset, $value) : self
-    {
-
-        if ($offset === null) {
-            $this->transactions[] = $value;
-        } else {
-            $this->transactions[$offset] = $value;
-        }
-
-        return $this;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function offsetUnset($offset) : void
-    {
-
-        unset($this->transactions[$offset]);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function count() : int
-    {
-
-        return count($this->transactions);
+        return $this->items;
     }
 }

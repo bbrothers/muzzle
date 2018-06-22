@@ -16,7 +16,7 @@ class Transaction implements ArrayAccess
     protected $request;
     protected $response;
     protected $error;
-    protected $options;
+    protected $options = [];
 
     public static function new()
     {

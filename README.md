@@ -101,7 +101,7 @@ $this->assertInstanceOf(Muzzle::class, $client);
 $client->post('https://example.com/contact')->assertSuccessful();
 $client->get('http://example.com/contact')->assertRedirect('https://example.com/contact');
 
-$client->histroy()->last()->request()->assertUriQueryNotHasKey('age');
+$client->lastRequest()->assertUriQueryNotHasKey('age');
 ```
 
 ## Change log
