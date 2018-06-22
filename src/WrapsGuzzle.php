@@ -93,7 +93,7 @@ trait WrapsGuzzle
                 $method,
                 $dumper->dump((new VarCloner)->cloneVar($arguments), true)
             ));
-            throw $exception;
+            throw $exception; // @codeCoverageIgnore
         }
     }
 }

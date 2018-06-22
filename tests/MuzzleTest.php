@@ -6,9 +6,9 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
+use Muzzle\Messages\AssertableRequest;
 use Muzzle\Messages\Transaction;
 use Muzzle\Middleware\Decodable;
-use PHPUnit\Framework\ExpectationFailedException;
 use PHPUnit\Framework\TestCase;
 
 class MuzzleTest extends TestCase
@@ -94,5 +94,31 @@ class MuzzleTest extends TestCase
         $client->flush();
 
         $this->assertEmpty(Muzzle::container());
+    }
+
+    /** @test */
+    public function itCanGetTheLastRequest()
+    {
+
+        $muzzle = new Muzzle;
+        $request = AssertableRequest::fromBaseRequest(new Request(HttpMethod::GET, '/'));
+        $transaction = (new Transaction)->setRequest($request);
+        $muzzle->setHistory(new Transactions([new Transaction, $transaction]));
+
+        $this->assertSame($request, $muzzle->lastRequest());
+        Muzzle::flush();
+    }
+
+    /** @test */
+    public function itCanGetTheFirstRequest()
+    {
+
+        $muzzle = new Muzzle;
+        $request = AssertableRequest::fromBaseRequest(new Request(HttpMethod::GET, '/'));
+        $transaction = (new Transaction)->setRequest($request);
+        $muzzle->setHistory(new Transactions([$transaction, new Transaction]));
+
+        $this->assertSame($request, $muzzle->firstRequest());
+        Muzzle::flush();
     }
 }
