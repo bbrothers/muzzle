@@ -7,7 +7,7 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 ## [0.1.2] - 2018-06-21
 
 ### Added
-- Nothing
+- route pattern matching on path assertions
 
 ### Deprecated
 - Nothing

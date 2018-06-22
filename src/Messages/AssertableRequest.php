@@ -3,6 +3,7 @@
 namespace Muzzle\Messages;
 
 use GuzzleHttp\Psr7;
+use Illuminate\Support\Str;
 use PHPUnit\Framework\Assert as PHPUnit;
 use Psr\Http\Message\RequestInterface;
 
@@ -71,7 +72,15 @@ class AssertableRequest implements RequestInterface
     public function assertMethod(string $method)
     {
 
-        PHPUnit::assertEquals(strtoupper($method), $this->getMethod());
+        PHPUnit::assertEquals(
+            strtoupper($method),
+            $this->getMethod(),
+            sprintf(
+                'Expected HTTP method [%s]. Got [%s]',
+                strtoupper($method),
+                $this->getMethod()
+            )
+        );
 
         return $this;
     }
@@ -149,14 +158,22 @@ class AssertableRequest implements RequestInterface
 
     /**
      * Assert that the given string matches the path component of the URI.
+     * Wildcard matches can be represented by an asterisk (*)
      *
-     * @param  string $path
+     * @param  string $pattern
      * @return $this
      */
-    public function assertUriPath($path)
+    public function assertUriPath($pattern)
     {
 
-        PHPUnit::assertEquals($path, $this->getUri()->getPath());
+        PHPUnit::assertTrue(
+            Str::is($pattern, $this->getUri()->getPath()),
+            sprintf(
+                'The path [%s] does not match the expected pattern [%s].',
+                $this->getUri()->getPath(),
+                $pattern
+            )
+        );
 
         return $this;
     }

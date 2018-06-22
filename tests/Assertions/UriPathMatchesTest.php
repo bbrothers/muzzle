@@ -58,4 +58,27 @@ class UriPathMatchesTest extends TestCase
 
         $assertion->assert($actualUri, $expectedUri);
     }
+
+
+    /** @test */
+    public function itAllowsMatchingWildcardParameters()
+    {
+
+        $muzzle = $this->prophesize(Muzzle::class);
+        $muzzle->getConfig('base_uri')
+               ->willReturn(new Uri('https://example.com/api'));
+
+        $expected = (new Transaction)->setRequest(
+            (new RequestBuilder)->setUri('/foo/*/bar')->build()
+        );
+        $actual = (new Transaction)->setRequest(
+            new AssertableRequest((new RequestBuilder)->setUri('/foo/123/bar')->build())
+        );
+
+        $this->assertTrue((function () use ($muzzle, $actual, $expected) {
+
+            (new UriPathMatches($muzzle->reveal()))->assert($actual, $expected);
+            return true;
+        })());
+    }
 }
