@@ -7,6 +7,7 @@ use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use Muzzle\Assertions\AssertionRules;
+use Muzzle\Messages\AssertableRequest;
 use Muzzle\Messages\Transaction;
 use Muzzle\Middleware\Assertable;
 use Muzzle\Middleware\History;
@@ -128,6 +129,18 @@ class Muzzle implements ClientInterface
     {
 
         return $this->history;
+    }
+
+    public function lastRequest() : AssertableRequest
+    {
+
+        return $this->history->last()->request();
+    }
+
+    public function firstRequest() : AssertableRequest
+    {
+
+        return $this->history->first()->request();
     }
 
     public function expectations() : Transactions
