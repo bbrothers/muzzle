@@ -2,12 +2,11 @@
 
 namespace Muzzle;
 
-use Throwable;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Uri;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
-use function GuzzleHttp\Psr7\build_query;
+use Throwable;
 use function GuzzleHttp\Psr7\parse_query;
 
 class RequestBuilder
@@ -126,7 +125,10 @@ class RequestBuilder
     public function build() : Request
     {
 
-        $uri = $this->uri->withQuery(build_query(array_merge(parse_query($this->uri->getQuery()), $this->query)));
+        $uri = $this->uri->withQuery(http_build_query(array_merge(
+            parse_query($this->uri->getQuery()),
+            $this->query
+        )));
 
         return new Request($this->method->getValue(), $uri, $this->headers, $this->body);
     }
