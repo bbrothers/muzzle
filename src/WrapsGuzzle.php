@@ -2,7 +2,6 @@
 
 namespace Muzzle;
 
-use BadMethodCallException;
 use GuzzleHttp\Promise\PromiseInterface;
 use Muzzle\Messages\AssertableResponse;
 use OutOfBoundsException;
@@ -94,6 +93,7 @@ trait WrapsGuzzle
                 $method,
                 $dumper->dump((new VarCloner)->cloneVar($arguments), true)
             ));
+            throw $exception;
         }
-    } // @codeCoverageIgnore
+    }
 }
