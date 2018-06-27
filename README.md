@@ -70,7 +70,7 @@ By default `Muzzle` will run assertions that:
 - assert the expected request URI matches the actual request URI (including a configured `base_uri`)
 - assert the expected request method matches the actual request method
 - assert the expected request query (if provided) is contained in the actual request query
-- assert the expected request body (if provided) matches the actual request body
+- assert the expected request body (if provided) is contained in the actual request body
 - assert the expected request headers (if provided) are contained in the actual request headers
 
 Custom assertion rules can be added by implementing the `Assertion` interface and using `AssertionRules::push` or 

@@ -93,6 +93,14 @@ class RequestBuilder
         return $this;
     }
 
+    public function setJson(array $body) : RequestBuilder
+    {
+
+        $this->body = json_encode($body);
+
+        return $this;
+    }
+
     public function setQuery(array $query = []) : RequestBuilder
     {
 
