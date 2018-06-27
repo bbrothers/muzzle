@@ -12,6 +12,9 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 - added shortcut methods to first and last request on the `Muzzle` instance
 - replaced exact match with a contains check for the request body default assertion
 - added `setJson` helper to automatically `json_encode`the provided body when building requests
+- allow `JsonFixture` to be cast to a string
+- added `setJson` helper to `ResponseBuilder`
+- name middleware when added and insure they come before history
 
 ### Deprecated
 - Nothing
