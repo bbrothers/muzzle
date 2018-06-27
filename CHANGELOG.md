@@ -16,6 +16,7 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ### Fixed
 - fixed generating nested array query strings
+- improved assertion failure messages
 
 ### Removed
 - Nothing
