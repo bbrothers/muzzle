@@ -2,6 +2,7 @@
 
 namespace Muzzle;
 
+use GuzzleHttp\Psr7\Response;
 use Muzzle\Messages\JsonFixture;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
@@ -59,5 +60,15 @@ class ResponseBuilderTest extends TestCase
         $fixture = ResponseBuilder::fromFixture('response.json');
 
         $this->assertInstanceOf(JsonFixture::class, $fixture);
+    }
+
+    /** @test */
+    public function itCanSetTheBodyAsJsonFromAnArray()
+    {
+
+        $data = ['data' => ['message' => 'done']];
+        $response = (new ResponseBuilder)->setJson($data)->build();
+
+        $this->assertEquals(json_encode($data), $response->getBody()->getContents());
     }
 }

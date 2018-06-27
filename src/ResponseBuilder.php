@@ -90,6 +90,17 @@ class ResponseBuilder
         return $this;
     }
 
+    /**
+     * @param mixed $body
+     * @return ResponseBuilder
+     */
+    public function setJson($body) : ResponseBuilder
+    {
+
+        $this->body = \GuzzleHttp\json_encode($body);
+        return $this;
+    }
+
     public function setBodyFromFixture(string $path) : ResponseBuilder
     {
 

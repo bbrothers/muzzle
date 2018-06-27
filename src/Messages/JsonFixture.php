@@ -137,4 +137,10 @@ class JsonFixture implements ResponseInterface, ArrayAccess
 
         $this->forget($offset);
     }
+
+    public function __toString() : string
+    {
+
+        return (string) $this->getBody();
+    }
 }

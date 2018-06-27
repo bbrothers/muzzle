@@ -103,7 +103,7 @@ class Muzzle implements ClientInterface
     {
 
         foreach ($middlewares as $middleware) {
-            $this->stack->push($middleware);
+            $this->stack->before('history', $middleware, is_object($middleware) ? get_class($middleware) : '');
         }
 
         return $this;
