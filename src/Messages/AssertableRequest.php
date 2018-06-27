@@ -4,6 +4,7 @@ namespace Muzzle\Messages;
 
 use GuzzleHttp\Psr7;
 use Illuminate\Support\Str;
+use Muzzle\CliFormatter;
 use PHPUnit\Framework\Assert as PHPUnit;
 use Psr\Http\Message\RequestInterface;
 
@@ -76,9 +77,10 @@ class AssertableRequest implements RequestInterface
             strtoupper($method),
             $this->getMethod(),
             sprintf(
-                'Expected HTTP method [%s]. Got [%s]',
+                'Expected HTTP method [%s]. Got [%s] for request to %s.',
                 strtoupper($method),
-                $this->getMethod()
+                $this->getMethod(),
+                urldecode($this->getUri())
             )
         );
 
@@ -91,7 +93,7 @@ class AssertableRequest implements RequestInterface
      * @param  string $scheme
      * @return $this
      */
-    public function assertUriScheme($scheme)
+    public function assertUriScheme(string $scheme)
     {
 
         PHPUnit::assertEquals($scheme, $this->getUri()->getScheme());
@@ -105,7 +107,7 @@ class AssertableRequest implements RequestInterface
      * @param  string $authority
      * @return $this
      */
-    public function assertUriAuthority($authority)
+    public function assertUriAuthority(string $authority)
     {
 
         PHPUnit::assertEquals($authority, $this->getUri()->getAuthority());
@@ -119,7 +121,7 @@ class AssertableRequest implements RequestInterface
      * @param  string $userInfo
      * @return $this
      */
-    public function assertUriUserInfo($userInfo)
+    public function assertUriUserInfo(string $userInfo)
     {
 
         PHPUnit::assertEquals($userInfo, $this->getUri()->getUserInfo());
@@ -133,7 +135,7 @@ class AssertableRequest implements RequestInterface
      * @param  string $host
      * @return $this
      */
-    public function assertUriHost($host)
+    public function assertUriHost(string $host)
     {
 
         PHPUnit::assertEquals($host, $this->getUri()->getHost());
@@ -147,7 +149,7 @@ class AssertableRequest implements RequestInterface
      * @param  int|null $port
      * @return $this
      */
-    public function assertUriPort($port = null)
+    public function assertUriPort(?int $port = null)
     {
 
         PHPUnit::assertEquals($port, $this->getUri()->getPort());
@@ -163,14 +165,14 @@ class AssertableRequest implements RequestInterface
      * @param  string $pattern
      * @return $this
      */
-    public function assertUriPath($pattern)
+    public function assertUriPath(string $pattern)
     {
 
         PHPUnit::assertTrue(
             Str::is($pattern, $this->getUri()->getPath()),
             sprintf(
                 'The path [%s] does not match the expected pattern [%s].',
-                $this->getUri()->getPath(),
+                urldecode($this->getUri()->getPath()),
                 $pattern
             )
         );
@@ -185,7 +187,7 @@ class AssertableRequest implements RequestInterface
      * @param  string $fragment
      * @return $this
      */
-    public function assertUriFragment($fragment)
+    public function assertUriFragment(string $fragment)
     {
 
         PHPUnit::assertEquals($fragment, $this->getUri()->getFragment());
@@ -200,7 +202,7 @@ class AssertableRequest implements RequestInterface
      * @param  string $query
      * @return $this
      */
-    public function assertUriQuery($query)
+    public function assertUriQuery(string $query)
     {
 
         PHPUnit::assertEquals($query, $this->getUri()->getQuery());
@@ -214,7 +216,7 @@ class AssertableRequest implements RequestInterface
      * @param  string $key
      * @return $this
      */
-    public function assertUriQueryHasKey($key)
+    public function assertUriQueryHasKey(string $key)
     {
 
         $query = Psr7\parse_query($this->getUri()->getQuery());
@@ -229,11 +231,15 @@ class AssertableRequest implements RequestInterface
      * @param  string $key
      * @return $this
      */
-    public function assertUriQueryNotHasKey($key)
+    public function assertUriQueryNotHasKey(string $key)
     {
 
         $query = Psr7\parse_query($this->getUri()->getQuery());
-        PHPUnit::assertArrayNotHasKey($key, $query);
+        PHPUnit::assertArrayNotHasKey($key, $query, sprintf(
+            'Could not find [%s] in the query parameters: %s',
+            $key,
+            CliFormatter::format($query)
+        ));
 
         return $this;
     }
@@ -251,9 +257,9 @@ class AssertableRequest implements RequestInterface
         PHPUnit::assertArraySubset($values, $query, false, (function ($expected, $actual) {
 
             return 'Could not find ' . PHP_EOL
-                   . var_export($expected, true) . PHP_EOL
+                   . CliFormatter::format($expected) . PHP_EOL
                    . 'within response' . PHP_EOL
-                   . var_export($actual, true) . PHP_EOL;
+                   . CliFormatter::format($actual) . PHP_EOL;
         })($values, $query));
 
         return $this;
@@ -262,7 +268,11 @@ class AssertableRequest implements RequestInterface
     public function assertUriEquals(Psr7\Uri $uri)
     {
 
-        PHPUnit::assertEquals($this->getUri(), $uri, sprintf('Failed asserting %s equals %s', $this->getUri(), $uri));
+        PHPUnit::assertEquals($this->getUri(), $uri, sprintf(
+            'Failed asserting %s equals %s',
+            urldecode($this->getUri()),
+            urldecode($uri)
+        ));
 
         return $this;
     }

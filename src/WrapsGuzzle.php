@@ -9,9 +9,6 @@ use PHPUnit\Framework\Assert as PHPUnit;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\UriInterface;
-use Symfony\Component\VarDumper\Cloner\VarCloner;
-use Symfony\Component\VarDumper\Dumper\AbstractDumper;
-use Symfony\Component\VarDumper\Dumper\CliDumper;
 
 /**
  * @method AssertableResponse get(string | UriInterface $uri, array $options = [])
@@ -87,11 +84,10 @@ trait WrapsGuzzle
         try {
             return $this->client->{$method}(...$arguments);
         } catch (OutOfBoundsException $exception) {
-            $dumper = new CliDumper(null, null, AbstractDumper::DUMP_LIGHT_ARRAY);
             PHPUnit::fail(sprintf(
                 'Mock queue was empty when calling [%s] with the arguments: %s',
                 $method,
-                $dumper->dump((new VarCloner)->cloneVar($arguments), true)
+                CliFormatter::format(...$arguments)
             ));
             throw $exception; // @codeCoverageIgnore
         }

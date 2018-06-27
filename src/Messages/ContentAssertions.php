@@ -4,6 +4,7 @@ namespace Muzzle\Messages;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use Muzzle\CliFormatter;
 use PHPUnit\Framework\Assert as PHPUnit;
 
 trait ContentAssertions
@@ -107,9 +108,9 @@ trait ContentAssertions
     protected function assertJsonMessage(array $data) : string
     {
 
-        $expected = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        $expected = CliFormatter::format($data);
 
-        $actual = json_encode($this->decode(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        $actual = CliFormatter::format($this->decode());
 
         return 'Unable to find JSON: ' . PHP_EOL . PHP_EOL .
                "[{$expected}]" . PHP_EOL . PHP_EOL .
@@ -211,11 +212,19 @@ trait ContentAssertions
                     $this->assertJsonStructure($structure['*'], $responseDataItem);
                 }
             } elseif (is_array($value)) {
-                PHPUnit::assertArrayHasKey($key, $responseData);
+                PHPUnit::assertArrayHasKey($key, $responseData, sprintf(
+                    'Could not find key [%s] within data subset: %s',
+                    $key,
+                    CliFormatter::format($responseData)
+                ));
 
                 $this->assertJsonStructure($structure[$key], $responseData[$key]);
             } else {
-                PHPUnit::assertArrayHasKey($value, $responseData);
+                PHPUnit::assertArrayHasKey($value, $responseData, sprintf(
+                    'Could not find key [%s] within data subset: %s',
+                    $value,
+                    CliFormatter::format($responseData)
+                ));
             }
         }
 
