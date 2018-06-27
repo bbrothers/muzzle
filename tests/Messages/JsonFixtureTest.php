@@ -108,4 +108,12 @@ class JsonFixtureTest extends TestCase
         $this->assertTrue($fixture->has('data.foo'));
         $this->assertFalse(isset($fixture['data.missing']));
     }
+
+    /** @test */
+    public function itCanBeCastToAString()
+    {
+
+        $body = json_encode(['data' => ['foo' => 'bar']]);
+        $this->assertSame($body, (string) new JsonFixture(HttpMethod::GET, [], $body));
+    }
 }
