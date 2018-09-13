@@ -180,6 +180,22 @@ class AssertableRequest implements RequestInterface
         return $this;
     }
 
+    public function assertUriPathMatches(string $pattern) : self
+    {
+
+        PHPUnit::assertRegExp(
+            $pattern,
+            $this->getUri()->getPath(),
+            sprintf(
+                'The path [%s] does not match the expected pattern [%s].',
+                urldecode($this->getUri()->getPath()),
+                $pattern
+            )
+        );
+
+        return $this;
+    }
+
 
     /**
      * Assert that the given string matches the fragment component of the URI.

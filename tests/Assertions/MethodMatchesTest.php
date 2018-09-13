@@ -4,7 +4,7 @@ namespace Muzzle\Assertions;
 
 use Muzzle\HttpMethod;
 use Muzzle\Messages\AssertableRequest;
-use Muzzle\Messages\Transaction;
+use Muzzle\Muzzle;
 use Muzzle\RequestBuilder;
 use PHPUnit\Framework\ExpectationFailedException;
 use PHPUnit\Framework\TestCase;
@@ -16,24 +16,20 @@ class MethodMatchesTest extends TestCase
     public function itFailsTheTestIfTheExpectedAndActualMethodsDoNotMatch()
     {
 
-        $expected = (new Transaction)->setRequest((new RequestBuilder)->build());
-        $actual = (new Transaction)->setRequest(
-            new AssertableRequest((new RequestBuilder(HttpMethod::POST()))->build())
-        );
+        $request = (new RequestBuilder)->setMethod(HttpMethod::POST())->build();
+        $request = AssertableRequest::fromBaseRequest($request);
 
         $this->expectException(ExpectationFailedException::class);
-        (new MethodMatches)->assert($actual, $expected);
+        (new MethodMatches(HttpMethod::GET, HttpMethod::PUT))($request, new Muzzle);
     }
 
     /** @test */
     public function itWillNotFailIfTheExpectedAndActualMethodsMatch()
     {
 
-        $expected = (new Transaction)->setRequest((new RequestBuilder)->build());
-        $actual = (new Transaction)->setRequest(
-            new AssertableRequest((new RequestBuilder)->build())
-        );
+        $request = (new RequestBuilder)->setMethod(HttpMethod::POST())->build();
+        $request = AssertableRequest::fromBaseRequest($request);
 
-        (new MethodMatches)->assert($actual, $expected);
+        (new MethodMatches(HttpMethod::POST, HttpMethod::PUT))($request, new Muzzle);
     }
 }

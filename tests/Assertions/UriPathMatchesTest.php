@@ -5,7 +5,6 @@ namespace Muzzle\Assertions;
 use GuzzleHttp\Psr7\Uri;
 use Muzzle\HttpMethod;
 use Muzzle\Messages\AssertableRequest;
-use Muzzle\Messages\Transaction;
 use Muzzle\Muzzle;
 use Muzzle\RequestBuilder;
 use PHPUnit\Framework\ExpectationFailedException;
@@ -22,19 +21,14 @@ class UriPathMatchesTest extends TestCase
         $muzzle->getConfig('base_uri')
                ->willReturn(new Uri('https://example.com/api'));
 
-        $assertion = new UriPathMatches($muzzle->reveal());
+        $assertion = new UriPathMatches('/foo/bar');
 
-        $expectedUri = (new Transaction)->setRequest(
-            (new RequestBuilder(HttpMethod::GET(), '/foo/bar'))->build()
-        );
-        $actualUri = (new Transaction)->setRequest(
-            new AssertableRequest(
-                (new RequestBuilder(HttpMethod::GET(), '/api/foo/bar'))->build()
-            )
+        $actual = AssertableRequest::fromBaseRequest(
+            (new RequestBuilder(HttpMethod::GET(), '/api/foo/bar'))->build()
         );
 
         $this->expectException(ExpectationFailedException::class);
-        $assertion->assert($actualUri, $expectedUri);
+        $assertion($actual, $muzzle->reveal());
     }
 
     /** @test */
@@ -45,18 +39,13 @@ class UriPathMatchesTest extends TestCase
         $muzzle->getConfig('base_uri')
                ->willReturn(new Uri('https://example.com/api'));
 
-        $assertion = new UriPathMatches($muzzle->reveal());
+        $assertion = new UriPathMatches('/foo/bar');
 
-        $expectedUri = (new Transaction)->setRequest(
+        $actual = AssertableRequest::fromBaseRequest(
             (new RequestBuilder(HttpMethod::GET(), '/foo/bar'))->build()
         );
-        $actualUri = (new Transaction)->setRequest(
-            new AssertableRequest(
-                (new RequestBuilder(HttpMethod::GET(), '/foo/bar'))->build()
-            )
-        );
 
-        $assertion->assert($actualUri, $expectedUri);
+        $assertion($actual, $muzzle->reveal());
     }
 
 
@@ -68,17 +57,35 @@ class UriPathMatchesTest extends TestCase
         $muzzle->getConfig('base_uri')
                ->willReturn(new Uri('https://example.com/api'));
 
-        $expected = (new Transaction)->setRequest(
-            (new RequestBuilder)->setUri('/foo/*/bar')->build()
-        );
-        $actual = (new Transaction)->setRequest(
-            new AssertableRequest((new RequestBuilder)->setUri('/foo/123/bar')->build())
+        $assertion = new UriPathMatches('/foo/*/bar');
+
+        $actual = AssertableRequest::fromBaseRequest(
+            (new RequestBuilder(HttpMethod::GET(), '/foo/123/bar'))->build()
         );
 
-        $this->assertTrue((function () use ($muzzle, $actual, $expected) {
+        $assertion($actual, $muzzle->reveal());
+    }
 
-            (new UriPathMatches($muzzle->reveal()))->assert($actual, $expected);
-            return true;
-        })());
+    /** @test */
+    public function itCanMatchARegexPattern()
+    {
+
+        $muzzle = $this->prophesize(Muzzle::class);
+        $muzzle->getConfig('base_uri')
+               ->willReturn(new Uri('https://example.com/api'));
+
+        $assertion = new UriPathMatches('#foo\/\d+\/[bar|baz]#');
+
+        $actual = AssertableRequest::fromBaseRequest(
+            (new RequestBuilder(HttpMethod::GET(), '/foo/123/bar'))->build()
+        );
+
+        $assertion($actual, $muzzle->reveal());
+
+        $actual = AssertableRequest::fromBaseRequest(
+            (new RequestBuilder(HttpMethod::GET(), '/foo/22/baz'))->build()
+        );
+
+        $assertion($actual, $muzzle->reveal());
     }
 }

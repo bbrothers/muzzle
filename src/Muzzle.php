@@ -6,9 +6,8 @@ use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
-use Muzzle\Assertions\AssertionRules;
+use Illuminate\Support\Collection;
 use Muzzle\Messages\AssertableRequest;
-use Muzzle\Messages\Transaction;
 use Muzzle\Middleware\Assertable;
 use Muzzle\Middleware\History;
 
@@ -38,15 +37,15 @@ class Muzzle implements ClientInterface
      */
     protected $handler;
     /**
-     * @var Transactions
+     * @var Collection
      */
-    protected $transactions;
+    protected $expectations;
     protected $assertionsHaveRun;
 
     public function __construct(array $options = [])
     {
 
-        $this->transactions = new Transactions;
+        $this->expectations = new Collection;
         $this->handler = new MockHandler;
         $this->stack = HandlerStack::create($this->handler);
         $this->client = new GuzzleClient(array_merge($options, ['handler' => $this->stack]));
@@ -84,16 +83,19 @@ class Muzzle implements ClientInterface
     {
 
         $this->assertionsHaveRun = true;
-        AssertionRules::new($this)->runAssertions();
+        foreach ($this->expectations() as $index => $expectation) {
+            foreach ($expectation->assertions() as $assertion) {
+                $assertion($this->history()->get($index)->request(), $this);
+            }
+        }
     }
 
-    public function append(Transaction ...$transactions) : Muzzle
+    public function append(Expectation ...$expectations) : Muzzle
     {
 
-        foreach ($transactions as $transaction) {
-            $this->transactions->push($transaction);
-
-            $this->handler->append($transaction->response() ?: $transaction->error());
+        foreach ($expectations as $expectation) {
+            $this->expectations->push($expectation);
+            $this->handler->append($expectation->reply());
         }
 
         return $this;
@@ -143,10 +145,13 @@ class Muzzle implements ClientInterface
         return $this->history->first()->request();
     }
 
-    public function expectations() : Transactions
+    /**
+     * @return Collection|Expectation[]
+     */
+    public function expectations() : Collection
     {
 
-        return $this->transactions;
+        return $this->expectations;
     }
 
     public static function container() : Container

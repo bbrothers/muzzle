@@ -2,7 +2,9 @@
 
 namespace Muzzle\Assertions;
 
-use Muzzle\Messages\Transaction;
+use Muzzle\Expectation;
+use Muzzle\Messages\AssertableRequest;
+use Muzzle\Muzzle;
 use Muzzle\RequestBuilder;
 use PHPUnit\Framework\ExpectationFailedException;
 use PHPUnit\Framework\TestCase;
@@ -14,19 +16,20 @@ class ExpectedRequestWasMadeTest extends TestCase
     public function itRaisesAnAssertionExceptionIfAnExpectedHttpCallIsNotMade()
     {
 
-        $expectation = (new Transaction)->setRequest((new RequestBuilder)->build());
+        $expectation = new ExpectedRequestWasMade(new Expectation);
 
         $this->expectException(ExpectationFailedException::class);
-        (new ExpectedRequestWasMade)->assert(null, $expectation);
+        $expectation(null, new Muzzle);
     }
 
     /** @test */
     public function itWillNotFailIfARequestWasMade()
     {
 
-        $expectation = (new Transaction)->setRequest((new RequestBuilder)->build());
-        $actual = (new Transaction)->setRequest((new RequestBuilder)->build());
+        $expectation = new ExpectedRequestWasMade(new Expectation);
 
-        (new ExpectedRequestWasMade)->assert($actual, $expectation);
+        $assertion = new AssertableRequest((new RequestBuilder)->build());
+
+        $expectation($assertion, new Muzzle);
     }
 }

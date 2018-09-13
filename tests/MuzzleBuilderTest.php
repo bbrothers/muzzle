@@ -4,11 +4,8 @@ namespace Muzzle;
 
 use Exception;
 use GuzzleHttp\Client;
-use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
-use Muzzle\Messages\AssertableRequest;
-use Muzzle\Messages\Transaction;
-use Muzzle\Middleware\Assertable;
+use Illuminate\Support\Collection;
 use PHPUnit\Framework\TestCase;
 
 function app()
@@ -43,33 +40,32 @@ class MuzzleBuilderTest extends TestCase
     }
 
     /** @test */
-    public function itCanBeCreatedWithATransactionSet()
+    public function itCanBeCreatedWithAnExpectationSet()
     {
 
-        $transactions = new Transactions;
-        $transactions->push((new Transaction)->setRequest(new Request(HttpMethod::GET, '/'))
-                                             ->setResponse(new Response));
-        $client = MuzzleBuilder::create($transactions)->build();
+        $expectations = new Collection;
+        $expectations->push((new Expectation)->method(HttpMethod::GET)->replyWith(new Response));
+        $client = MuzzleBuilder::create($expectations)->build();
 
-        $this->assertEquals($transactions, $client->expectations());
+        $this->assertEquals($expectations, $client->expectations());
         $client->get('/');
     }
 
     /** @test */
-    public function itCanEnqueueATransactionSet()
+    public function itCanEnqueueAnExpectationSet()
     {
 
-        $transactions = new Transactions;
-        $transactions->push((new Transaction)->setRequest(new Request(HttpMethod::GET, '/'))
-                                             ->setResponse(new Response));
-        $transactions->push((new Transaction)->setRequest(new Request(HttpMethod::POST, '/'))
-                                             ->setError(new Exception));
+        $expectations = new Collection;
+        $expectations->push((new Expectation)->method(HttpMethod::GET)
+                                             ->replyWith(new Response));
+        $expectations->push((new Expectation)->method(HttpMethod::POST)
+                                             ->replyWith(new Exception));
         $client = MuzzleBuilder::create()
-                               ->enqueue(new Request(HttpMethod::GET, '/'), new Response)
-                               ->enqueue(new Request(HttpMethod::POST, '/'), new Exception)
+                               ->expect((new Expectation)->method(HttpMethod::GET)->replyWith(new Response))
+                               ->expect((new Expectation)->method(HttpMethod::POST)->replyWith(new Exception))
                                ->build();
 
-        $this->assertEquals($transactions, $client->expectations());
+        $this->assertEquals($expectations, $client->expectations());
         $client->get('/');
         $this->expectException(Exception::class);
         $client->post('/');
@@ -79,18 +75,30 @@ class MuzzleBuilderTest extends TestCase
     public function itCanUseAChainingMethodToBuildRequests()
     {
 
-        $transactions = new Transactions;
-        $transactions->push((new Transaction)->setRequest(new Request(HttpMethod::GET, '/'))
-                                             ->setResponse(new Response(HttpStatus::ACCEPTED)));
-        $transactions->push((new Transaction)->setRequest(new Request(HttpMethod::POST, '/foo'))
-                                             ->setError(new Exception));
+        $expectations = new Collection;
+        $expectations->push(
+            (new Expectation)
+                ->method(HttpMethod::GET)
+                ->uri('/')
+                ->replyWith(new Response(HttpStatus::ACCEPTED))
+        );
+        $expectations->push(
+            (new Expectation)
+                ->method(HttpMethod::POST)
+                ->uri('/foo')
+                ->replyWith(new Exception)
+        );
 
         $client = MuzzleBuilder::create()
                                ->get('/')->replyWith(new Response(HttpStatus::ACCEPTED))
                                ->post('/foo')->replyWith(new Exception)
                                ->build();
 
-        $this->assertEquals($transactions, $client->expectations());
+        array_map(function (Expectation $expected, Expectation $actual) {
+
+            $this->assertEquals($expected->assertions(), $actual->assertions());
+        }, $expectations->toArray(), $client->expectations()->toArray());
+
         $client->get('/');
         $this->expectException(Exception::class);
         $client->post('/foo');
@@ -101,29 +109,23 @@ class MuzzleBuilderTest extends TestCase
     {
 
         $client = MuzzleBuilder::create()
-                               ->setMethod(HttpMethod::GET())
-                               ->setUri('/')
-                               ->setQuery(['foo' => 'bar'])
-                               ->setHeaders(['Content-Type' => 'application/json'])
-                               ->setBody('testing body')
-                               ->withMiddleware(new Assertable)
+                               ->get('/')
+                               ->queryShouldEqual(['foo' => 'bar'])
+                               ->headers(['Content-Type' => 'application/json', 'Accepts'])
+                               ->bodyShouldEqual('testing body')
                                ->build();
 
         $client->get('/', [
-            'headers' => ['Content-Type' => 'application/json'],
+            'headers' => ['Content-Type' => 'application/json', 'Accepts' => 'application/json'],
             'body' => 'testing body',
             'query' => ['foo' => 'bar'],
         ]);
 
-        $request = $client->expectations()->first()->request();
+        $expectation = $client->expectations()->first();
 
-
-        (new AssertableRequest($request))
-            ->assertMethod(HttpMethod::GET)
-            ->assertUriPath('/')
-            ->assertUriQueryContains(['foo' => 'bar'])
-            ->assertHeader('Content-Type', 'application/json')
-            ->assertBodyEquals('testing body');
+        foreach ($expectation->assertions() as $assertion) {
+            $assertion($client->firstRequest(), $client);
+        }
     }
 
     /** @test */
@@ -131,23 +133,20 @@ class MuzzleBuilderTest extends TestCase
     {
 
         $client = MuzzleBuilder::create()
-                               ->setMethod(HttpMethod::GET())
-                               ->setUri('/')
-                               ->setJson(['json' => 'testing body'])
-                               ->withMiddleware(new Assertable)
+                               ->method(HttpMethod::GET)
+                               ->uri('/')
+                               ->json(['json' => 'testing body'])
                                ->build();
 
         $client->get('/', [
             'json' => ['json' => 'testing body'],
         ]);
 
-        $request = $client->expectations()->first()->request();
+        $expectation = $client->expectations()->first();
 
-
-        (new AssertableRequest($request))
-            ->assertMethod(HttpMethod::GET)
-            ->assertUriPath('/')
-            ->assertJson(['json' => 'testing body']);
+        foreach ($expectation->assertions() as $assertion) {
+            $assertion($client->firstRequest(), $client);
+        }
     }
 
     /** @test */

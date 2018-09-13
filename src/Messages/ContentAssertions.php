@@ -33,7 +33,7 @@ trait ContentAssertions
     public function assertSee($value) : self
     {
 
-        PHPUnit::assertContains($value, $this->getBody()->getContents());
+        PHPUnit::assertContains($value, (string) $this->getBody());
 
         return $this;
     }
@@ -47,7 +47,7 @@ trait ContentAssertions
     public function assertSeeText($value) : self
     {
 
-        PHPUnit::assertContains($value, strip_tags($this->getBody()->getContents()));
+        PHPUnit::assertContains($value, strip_tags((string) $this->getBody()));
 
         return $this;
     }
@@ -61,7 +61,7 @@ trait ContentAssertions
     public function assertDoNotSee($value) : self
     {
 
-        PHPUnit::assertNotContains($value, $this->getBody()->getContents());
+        PHPUnit::assertNotContains($value, (string) $this->getBody());
 
         return $this;
     }
@@ -75,7 +75,7 @@ trait ContentAssertions
     public function assertDoNotSeeText($value) : self
     {
 
-        PHPUnit::assertNotContains($value, strip_tags($this->getBody()->getContents()));
+        PHPUnit::assertNotContains($value, strip_tags((string) $this->getBody()));
 
         return $this;
     }
@@ -266,6 +266,6 @@ trait ContentAssertions
     public function dump() : void
     {
 
-        dd($this->isJson() ? $this->decode() : $this->getBody()->getContents());
+        dd($this->isJson() ? $this->decode() : (string) $this->getBody());
     }
 }

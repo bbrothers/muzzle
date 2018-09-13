@@ -16,6 +16,7 @@ class CliFormatter
     {
 
         $this->dumper = new CliDumper(null, null, CliDumper::DUMP_LIGHT_ARRAY);
+        $this->dumper->setColors(true);
         $this->cloner = new VarCloner;
     }
 

@@ -4,7 +4,7 @@ namespace Muzzle\Assertions;
 
 use Muzzle\HttpMethod;
 use Muzzle\Messages\AssertableRequest;
-use Muzzle\Messages\Transaction;
+use Muzzle\Muzzle;
 use Muzzle\RequestBuilder;
 use PHPUnit\Framework\ExpectationFailedException;
 use PHPUnit\Framework\TestCase;
@@ -16,32 +16,55 @@ class QueryContainsTest extends TestCase
     public function itFailsIfTheExpectedQueryParametersAreNotFoundInTheActualQueryParameters()
     {
 
-        $expected = (new Transaction)->setRequest(
-            (new RequestBuilder)->setQuery(['foo' => 'bar'])->build()
-        );
-        $actual = (new Transaction)->setRequest(new AssertableRequest(
+        $expectation = new QueryContains(['foo' => 'bar']);
+        $actual = new AssertableRequest(
             (new RequestBuilder(HttpMethod::POST()))
                 ->setQuery(['foo' => 'baz'])
                 ->build()
-        ));
+        );
 
         $this->expectException(ExpectationFailedException::class);
-        (new QueryContains)->assert($actual, $expected);
+        $expectation($actual, new Muzzle);
     }
 
     /** @test */
     public function itWillNotFailIfTheExpectedQueryParametersAreFoundInTheActualQueryParameters()
     {
 
-        $expected = (new Transaction)->setRequest(
-            (new RequestBuilder)->setQuery(['foo' => 'bar'])->build()
-        );
-        $actual = (new Transaction)->setRequest(new AssertableRequest(
+        $expectation = new QueryContains(['foo' => 'bar']);
+        $actual = new AssertableRequest(
             (new RequestBuilder)
-                ->setQuery(['foo' => 'bar',  'baz' => 'qux'])
+                ->setQuery(['foo' => 'bar', 'baz' => 'qux'])
                 ->build()
-        ));
+        );
 
-        (new QueryContains)->assert($actual, $expected);
+        $expectation($actual, new Muzzle);
+    }
+
+    /** @test */
+    public function itCanMatchRegexQueryValues()
+    {
+
+        $expectation = new QueryContains(['data' => [['foo' => ['bar' => '#b.*z#']]]]);
+        $actual = new AssertableRequest(
+            (new RequestBuilder)
+                ->setQuery(['data' => [['foo' => ['bar' => 'baz']]]])
+                ->build()
+        );
+
+        $expectation($actual, new Muzzle);
+        $expectation(
+            $actual->withUri($actual->getUri()->withQuery(http_build_query(
+                ['data' => [['foo' => ['bar' => 'buzz']]]]
+            ))),
+            new Muzzle
+        );
+        $this->expectException(ExpectationFailedException::class);
+        $expectation(
+            $actual->withUri($actual->getUri()->withQuery(http_build_query(
+                ['data' => [['foo' => ['bar' => 'qux']]]]
+            ))),
+            new Muzzle
+        );
     }
 }

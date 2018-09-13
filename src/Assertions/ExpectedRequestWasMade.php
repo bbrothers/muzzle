@@ -2,19 +2,29 @@
 
 namespace Muzzle\Assertions;
 
-use Muzzle\Messages\Transaction;
+use Muzzle\Expectation;
+use Muzzle\Messages\AssertableRequest;
+use Muzzle\Muzzle;
 use PHPUnit\Framework\Assert as PHPUnit;
+use Psr\Http\Message\RequestInterface;
 
 class ExpectedRequestWasMade implements Assertion
 {
 
-    public function assert(?Transaction $actual, Transaction $expected) : void
+    private $expected;
+
+    public function __construct(Expectation $expected)
     {
 
-        PHPUnit::assertInstanceOf(Transaction::class, $actual, sprintf(
-            'The expected request [%s]%s was not made.',
-            $expected->request()->getMethod(),
-            $expected->request()->getUri()->__toString()
+        $this->expected = $expected;
+    }
+
+    public function __invoke(?AssertableRequest $actual, Muzzle $muzzle) : void
+    {
+
+        PHPUnit::assertInstanceOf(RequestInterface::class, $actual, sprintf(
+            'The expected request %s was not made.',
+            (string) $this->expected
         ));
     }
 }
