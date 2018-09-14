@@ -123,4 +123,16 @@ class MuzzleTest extends TestCase
         $this->assertSame($request, $muzzle->firstRequest());
         Muzzle::flush();
     }
+
+    /** @test */
+    public function itClosingMuzzleMultipleTimesHasNoEffect()
+    {
+
+        $muzzle = new Muzzle;
+        $this->assertInstanceOf(Container::class, Muzzle::container());
+        Muzzle::close();
+        $this->assertAttributeEmpty('container', $muzzle);
+        Muzzle::close();
+        $this->assertAttributeEmpty('container', $muzzle);
+    }
 }

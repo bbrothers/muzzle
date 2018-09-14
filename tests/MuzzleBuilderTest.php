@@ -6,6 +6,7 @@ use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Collection;
+use Muzzle\Middleware\Decodable;
 use PHPUnit\Framework\TestCase;
 
 function app()
@@ -171,5 +172,19 @@ class MuzzleBuilderTest extends TestCase
 
         $this->assertInstanceOf(Muzzle::class, $muzzle);
         $this->assertEquals('https://example.com', $muzzle->getConfig('base_uri'));
+    }
+
+    /** @test */
+    public function itCanAddMiddlewareToTheMuzzleInstance()
+    {
+
+        $middleware = new Decodable;
+        $muzzle = MuzzleBuilder::create()
+                               ->withMiddleware($middleware)
+                               ->build();
+
+        $stack = $muzzle->getConfig('handler');
+
+        $this->assertContains(Decodable::class, (string) $stack);
     }
 }

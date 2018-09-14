@@ -4,9 +4,7 @@ namespace Muzzle;
 
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Uri;
-use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
-use Throwable;
 use function GuzzleHttp\Psr7\parse_query;
 
 class RequestBuilder
@@ -32,10 +30,6 @@ class RequestBuilder
      * @var array
      */
     private $query = [];
-    /**
-     * @var ResponseBuilder|\Psr\Http\Message\ResponseInterface|Throwable
-     */
-    private $reply;
 
 
     /**
@@ -107,27 +101,6 @@ class RequestBuilder
         $this->query = $query;
 
         return $this;
-    }
-
-    /**
-     * @param ResponseBuilder|ResponseInterface|Throwable $reply
-     * @return RequestBuilder
-     */
-    public function replyWith($reply = null) : RequestBuilder
-    {
-
-        $this->reply = $reply ?: new ResponseBuilder;
-
-        return $this;
-    }
-
-    /**
-     * @return ResponseInterface|ResponseBuilder
-     */
-    public function reply()
-    {
-
-        return $this->reply ?: $this->replyWith()->reply();
     }
 
     public function build() : Request

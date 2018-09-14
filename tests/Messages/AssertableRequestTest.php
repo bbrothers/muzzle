@@ -145,6 +145,20 @@ class AssertableRequestTest extends TestCase
     }
 
     /** @test */
+    public function itCanAssertThatTheRequestUriPathMatchesTheAProvidedPattern()
+    {
+
+        $request = new AssertableRequest(
+            new Request(HttpMethod::GET, 'https://user:password@example.com:80/foo?bar=baz&qux=quux')
+        );
+
+        $request->assertUriPathMatches('#.*o+#');
+
+        $this->expectException(ExpectationFailedException::class);
+        $request->assertUriPathMatches('#b.*#');
+    }
+
+    /** @test */
     public function itCanAssertThatTheRequestUriPathMatchesTheProvidedPattern()
     {
 
