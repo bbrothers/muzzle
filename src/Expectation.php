@@ -30,10 +30,10 @@ class Expectation
     protected $reply;
 
     /**
-     * @param string|null $method                                          HttpStatus method
-     * @param string|null $uri                                             URI
-     * @param array $headers                                               Request headers
-     * @param string|null|resource|\Psr\Http\Message\StreamInterface $body Request body
+     * @param string|null $method                        HttpStatus method
+     * @param string|null $uri                           URI
+     * @param array $headers                             Request headers
+     * @param string|null|resource|StreamInterface $body Request body
      */
     public function __construct(
         string $method = null,
@@ -43,8 +43,9 @@ class Expectation
     ) {
 
         $this->assertions['happened'] = new ExpectedRequestWasMade($this);
-        $this->method($method ?: HttpMethod::GET);
-        $this->uri($uri ?: '/');
+
+        $this->method($method);
+        $this->uri($uri);
         $this->headers($headers);
         $this->body($body);
     }
@@ -56,6 +57,12 @@ class Expectation
     {
 
         return array_values($this->assertions);
+    }
+
+    public function assertion(string $key) : ?Assertion
+    {
+
+        return $this->assertions[$key] ?? null;
     }
 
     /**
@@ -83,68 +90,84 @@ class Expectation
         return $this;
     }
 
-    public function method(string ...$methods) : self
+    public function method(?string ...$methods) : self
     {
 
-        $this->assertions['method'] = new MethodMatches(...$methods);
+        if (! empty(array_filter($methods))) {
+            $this->assertions['method'] = new MethodMatches(...$methods);
+        }
 
         return $this;
     }
 
-    public function uri($uri) : self
+    public function uri(?string $uri) : self
     {
 
-        $this->assertions['uri'] = new UriPathMatches($uri);
+        if ($uri) {
+            $this->assertions['uri'] = new UriPathMatches($uri);
+        }
 
         return $this;
     }
 
-    public function headers(array $headers) : self
+    public function headers(?array $headers) : self
     {
 
-        $this->assertions['headers'] = new HeadersMatch($headers);
+        if (! empty($headers)) {
+            $this->assertions['headers'] = new HeadersMatch($headers);
+        }
 
         return $this;
     }
 
-    public function query(array $expected) : self
+    public function query(?array $query) : self
     {
 
-        $this->assertions['query'] = new QueryContains($expected);
+        if (! empty($query)) {
+            $this->assertions['query'] = new QueryContains($query);
+        }
 
         return $this;
     }
 
-    public function queryShouldEqual(array $expected) : self
+    public function queryShouldEqual(?array $query) : self
     {
 
-        $this->assertions['query'] = new QueryEquals($expected);
+        if (! empty($query)) {
+            $this->assertions['query'] = new QueryEquals($query);
+        }
 
         return $this;
     }
 
     /**
-     * @param StreamInterface|array|string $expected
+     * @param StreamInterface|array|string $body
      * @return Expectation
      */
-    public function body($expected) : self
+    public function body($body) : self
     {
 
-        $this->assertions['body'] = new BodyMatches($expected);
+        if ($body) {
+            $this->assertions['body'] = new BodyMatches($body);
+        }
 
         return $this;
     }
 
-    public function bodyShouldEqual($expected) : self
+    public function bodyShouldEqual($body) : self
     {
 
-        return $this->should(function (AssertableRequest $request) use ($expected) {
+        if (! $body) {
+            return $this;
+        }
 
-            $request->assertBodyEquals($expected);
+        return $this->should(function (AssertableRequest $request) use ($body) {
+
+            $request->assertBodyEquals($body);
         });
     }
 
-    public function json(array $body) : self
+    public function json(?array $body) : self
     {
 
         return $this->body($body);
@@ -165,23 +188,9 @@ class Expectation
     public function __toString() : string
     {
 
-        $methods = array_reduce($this->assertions(), function ($methods, $assertion) {
+        $methods = $this->assertion('method') ? $this->assertion('method')->methods() : [];
 
-            if ($assertion instanceof MethodMatches) {
-                $methods = array_merge($methods, $assertion->methods());
-            }
-
-            return $methods;
-        }, []);
-
-        $uri = array_reduce($this->assertions(), function ($uri, $assertion) {
-
-            if ($assertion instanceof UriPathMatches) {
-                return $assertion->uri(new Muzzle);
-            }
-
-            return $uri;
-        });
+        $uri = $this->assertion('uri') ? $this->assertion('uri')->uri(new Muzzle) : null;
 
         return sprintf('[%s]%s', implode(', ', $methods), $uri);
     }

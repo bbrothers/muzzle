@@ -19,7 +19,7 @@ class CallbackAssertion implements Assertion
         $this->callable = $callable;
     }
 
-    public function __invoke(AssertableRequest $actual, Muzzle $muzzle) : void
+    public function __invoke(AssertableRequest $actual, Muzzle $muzzle = null) : void
     {
 
         ($this->callable)($actual, $muzzle);

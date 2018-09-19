@@ -4,7 +4,6 @@ namespace Muzzle\Assertions;
 
 use Muzzle\CliFormatter;
 use Muzzle\Messages\AssertableRequest;
-use Muzzle\Muzzle;
 use PHPUnit\Framework\Assert as PHPUnit;
 
 class QueryEquals implements Assertion
@@ -21,7 +20,7 @@ class QueryEquals implements Assertion
         $this->query = $query;
     }
 
-    public function __invoke(AssertableRequest $actual, Muzzle $muzzle) : void
+    public function __invoke(AssertableRequest $actual) : void
     {
 
         $expected = $this->query;
@@ -34,7 +33,7 @@ class QueryEquals implements Assertion
             'The expected query' . PHP_EOL
             . CliFormatter::format($expected) . PHP_EOL
             . 'does not equal' . PHP_EOL
-            . CliFormatter::format($actual) . PHP_EOL
+            . CliFormatter::format($query) . PHP_EOL
         );
     }
 }

@@ -4,7 +4,6 @@ namespace Muzzle\Assertions;
 
 use Illuminate\Support\Arr;
 use Muzzle\Messages\AssertableRequest;
-use Muzzle\Muzzle;
 
 class HeadersMatch implements Assertion
 {
@@ -20,7 +19,7 @@ class HeadersMatch implements Assertion
         $this->headers = $headers;
     }
 
-    public function __invoke(AssertableRequest $actual, Muzzle $muzzle) : void
+    public function __invoke(AssertableRequest $actual) : void
     {
 
         foreach ($this->headers as $header => $value) {

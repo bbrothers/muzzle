@@ -2,11 +2,10 @@
 
 namespace Muzzle\Assertions;
 
-use function Muzzle\is_json;
 use Muzzle\Messages\AssertableRequest;
-use Muzzle\Muzzle;
 use PHPUnit\Framework\Assert as PHPUnit;
 use Psr\Http\Message\StreamInterface;
+use function Muzzle\is_json;
 use function Muzzle\is_regex;
 
 class BodyMatches implements Assertion
@@ -23,7 +22,7 @@ class BodyMatches implements Assertion
         $this->body = $body instanceof StreamInterface ? (string) $body : $body;
     }
 
-    public function __invoke(AssertableRequest $actual, Muzzle $muzzle) : void
+    public function __invoke(AssertableRequest $actual) : void
     {
 
         if (! is_json($this->body) and is_regex($this->body)) {
