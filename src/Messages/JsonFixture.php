@@ -99,7 +99,16 @@ class JsonFixture implements ResponseInterface, ArrayAccess
     public function only(array $keys) : array
     {
 
-        return Arr::only($this->body, $keys);
+        $withDots = array_combine($keys, array_map(function ($key) {
+            return Arr::get($this->body, $key);
+        }, $keys));
+
+        $expanded = [];
+        foreach ($withDots as $key => $value) {
+            Arr::set($expanded, $key, $value);
+        }
+
+        return $expanded;
     }
 
     /**
