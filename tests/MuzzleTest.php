@@ -86,19 +86,6 @@ class MuzzleTest extends TestCase
     }
 
     /** @test */
-    public function itCanFlushTheContainer()
-    {
-
-        $client = Muzzle::builder()->get('https://example.com')->build();
-
-        $client->post('https://foo.com', []);
-
-        $client->flush();
-
-        $this->assertEmpty(Muzzle::container());
-    }
-
-    /** @test */
     public function itCanGetTheLastRequest()
     {
 
@@ -108,7 +95,6 @@ class MuzzleTest extends TestCase
         $muzzle->setHistory(new Transactions([new Transaction, $transaction]));
 
         $this->assertSame($request, $muzzle->lastRequest());
-        Muzzle::flush();
     }
 
     /** @test */
@@ -121,18 +107,5 @@ class MuzzleTest extends TestCase
         $muzzle->setHistory(new Transactions([$transaction, new Transaction]));
 
         $this->assertSame($request, $muzzle->firstRequest());
-        Muzzle::flush();
-    }
-
-    /** @test */
-    public function itClosingMuzzleMultipleTimesHasNoEffect()
-    {
-
-        $muzzle = new Muzzle;
-        $this->assertInstanceOf(Container::class, Muzzle::container());
-        Muzzle::close();
-        $this->assertAttributeEmpty('container', $muzzle);
-        Muzzle::close();
-        $this->assertAttributeEmpty('container', $muzzle);
     }
 }

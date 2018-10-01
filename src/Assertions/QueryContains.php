@@ -70,6 +70,6 @@ class QueryContains implements Assertion
     private function aliasAsUnparsedArraySyntax(AssertableRequest $actual, array $parameters) : array
     {
 
-        return array_merge(parse_query(urldecode($actual->getUri()->getQuery())), $parameters);
+        return array_merge(parse_query($actual->getUri()->getQuery()), $parameters);
     }
 }

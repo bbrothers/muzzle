@@ -26,13 +26,6 @@ function app()
 class MuzzleBuilderTest extends TestCase
 {
 
-    public function tearDown()
-    {
-
-        parent::tearDown();
-        Muzzle::close();
-    }
-
     /** @test */
     public function itCanBuildANewClientInstance()
     {
