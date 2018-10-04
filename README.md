@@ -33,16 +33,16 @@ $this->assertInstanceOf(Muzzle::class, $client);
 $client->post('https://example.com');
 $client->get('https://example.com');
 ```
-If not specified, requests will default to a `GET` with an empty URI and responses will default to an empty `200`.
+If not specified responses will default to an empty `200`.
 
 The `expect` method can be used to pass pre-built `Exception` instances:
 ```php
 $createUser = (new Expectation)
     ->post('users')
-    ->json(['name' => 'Jane', 'email' => "j.doe@example.com"])
+    ->json(['name' => 'Jane', 'email' => 'j.doe@example.com'])
     ->replyWith((new ResponseBuilder)->setJson(User::make([
         'name' => 'Jane', 
-        'email' => "j.doe@example.com"
+        'email' => 'j.doe@example.com'
     ])->toArray());
 
 $client = Muzzle::builder()->expect($createUser)->build();
@@ -60,23 +60,19 @@ for ($i = 0; $i < 10; $i++) {
 $client->append(...$expectations);
 ```
 
-`Muzzle` assertions should be run at the end of a test by calling the `makeAssertions` method.
-This can be automated by including the `MuzzleIntegration` trait in your test or base `TestCase` file. `Muzzle` stores a reference to all instances in the `Container` class, which allows us to call `Muzzle::close` to execute any outstanding assertions:
-```php
-class TestCase extends PHPUnit\Framework\TestCase
-{
-    use Muzzle\PHPUnit\MuzzleIntegrations;
-}
-``` 
-The container can also be cleared without running assertions using the `Muzzle::flush` method.
+By default `Muzzle` will expect that a request was made and return an empty `200` response.
 
-By default `Muzzle` will run assertions that:
-- assert all expected requests were made
-- assert the expected request URI matches the actual request URI (including a configured `base_uri`)
-- assert the expected request method matches the actual request method
-- assert the expected request query (if provided) is contained in the actual request query
-- assert the expected request body (if provided) is contained in the actual request body
-- assert the expected request headers (if provided) are contained in the actual request headers
+There are several pre-defined expectations available on the builder or `Expectation` class directly:
+- `method`: accepts a variadic list of HTTP methods and asserts the actual request method is in the provided list.
+- `uri`: accepts a URI, path or regex pattern to match the actual request against.
+- `headers`: accepts an array of headers. They can be either the header name or a key/value pair of header name/expected value and will assert that all headers match the provided values.
+- `query`: accepts an array of query parameters expected to be contained in the request. Parameters should be passed as an associative array of `[$name => $value]`, with the value optionally being a regex pattern.
+- `queryShouldEqual`: like `query` this method accepts an associative array of parameters, however these must match exactly (with the exception of the order) with the actual request.
+- `body`: accepts a string, array, `StreamInterface` instance or a regex pattern. If an array is given and the actual request is not json, it will `json_encode` the array and look for an exact match. If the actual request is JSON, it will decode it and use the same matching strategy as the `query` method, allowing for regex patterns as values. When a JSON string is provided, it will be decoded and treated the same as an array.
+- `json`: accepts an array and delegates to the `body` method.
+- `bodyShouldEqual`: accepts a string or string castable object, such as a `StreamInterface` instance, and asserts that it is an exact match to the actual request body.
+- `should`: accepts a `callable` and provides the actual request as an `AssertableRequest` instance and the `Muzzle` instance as parameters when invoking the `callable`. The `callable` is expected be a `void` return type, so any return value will be ignored. See below for details.
+ 
 
 Custom assertion rules can be added to an `Expectation` by calling the `should` method with a `callable` that implements the `Assertion` interface. When the `Assertion` is run, the recorded request will be passed to the `__invkoke` method as an `AssertableRequest` instance. The `Muzzle` instance is also passed as an optional second parameter.
 ```php
