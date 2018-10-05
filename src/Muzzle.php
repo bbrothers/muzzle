@@ -4,11 +4,9 @@ namespace Muzzle;
 
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
-use Muzzle\Assertions\AssertionRules;
+use Illuminate\Support\Collection;
 use Muzzle\Messages\AssertableRequest;
-use Muzzle\Messages\Transaction;
 use Muzzle\Middleware\Assertable;
 use Muzzle\Middleware\History;
 
@@ -17,10 +15,6 @@ class Muzzle implements ClientInterface
 
     use WrapsGuzzle;
 
-    /**
-     * @var Container
-     */
-    protected static $container;
     /**
      * @var Transactions
      */
@@ -38,23 +32,21 @@ class Muzzle implements ClientInterface
      */
     protected $handler;
     /**
-     * @var Transactions
+     * @var Collection
      */
-    protected $transactions;
+    protected $expectations;
     protected $assertionsHaveRun;
 
     public function __construct(array $options = [])
     {
 
-        $this->transactions = new Transactions;
-        $this->handler = new MockHandler;
+        $this->expectations = new Collection;
+        $this->handler = (new MockHandler)->setMuzzle($this);
         $this->stack = HandlerStack::create($this->handler);
         $this->client = new GuzzleClient(array_merge($options, ['handler' => $this->stack]));
         $this->setHistory(new Transactions);
         $this->stack->push(new Assertable, 'assertable');
         $this->stack->push(new History($this->history()), 'history');
-
-        static::container()->push($this);
     }
 
     public static function make(array $options = []) : Muzzle
@@ -80,20 +72,12 @@ class Muzzle implements ClientInterface
         return $this;
     }
 
-    public function makeAssertions() : void
+    public function append(Expectation ...$expectations) : Muzzle
     {
 
-        $this->assertionsHaveRun = true;
-        AssertionRules::new($this)->runAssertions();
-    }
-
-    public function append(Transaction ...$transactions) : Muzzle
-    {
-
-        foreach ($transactions as $transaction) {
-            $this->transactions->push($transaction);
-
-            $this->handler->append($transaction->response() ?: $transaction->error());
+        foreach ($expectations as $expectation) {
+            $this->expectations->push($expectation);
+            $this->handler->expect($expectation);
         }
 
         return $this;
@@ -103,7 +87,11 @@ class Muzzle implements ClientInterface
     {
 
         foreach ($middlewares as $middleware) {
-            $this->stack->before('history', $middleware, is_object($middleware) ? get_class($middleware) : '');
+            $this->stack->before(
+                'history',
+                $middleware,
+                is_object($middleware) ? get_class($middleware) : ''
+            );
         }
 
         return $this;
@@ -143,41 +131,12 @@ class Muzzle implements ClientInterface
         return $this->history->first()->request();
     }
 
-    public function expectations() : Transactions
+    /**
+     * @return Collection|Expectation[]
+     */
+    public function expectations() : Collection
     {
 
-        return $this->transactions;
-    }
-
-    public static function container() : Container
-    {
-
-        if (! static::$container) {
-            static::$container = new Container;
-        }
-
-        return static::$container;
-    }
-
-    public static function close() : void
-    {
-
-        if (static::$container === null) {
-            return;
-        }
-
-        $container = self::$container;
-        self::$container = null;
-        $container->makeAssertions();
-    }
-
-    public static function flush() : void
-    {
-
-        if (static::$container !== null) {
-            static::$container->flush();
-        }
-
-        static::$container = new Container;
+        return $this->expectations;
     }
 }

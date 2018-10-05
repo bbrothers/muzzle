@@ -42,4 +42,23 @@ class RequestBuilderTest extends TestCase
             urldecode($request->getUri())
         );
     }
+
+    /** @test */
+    public function itHasAHelperToSetAnArrayAsJsonOnTheBodyOfTheRequest()
+    {
+
+        $builder = new RequestBuilder;
+
+        $body = ['foo' => [['bar' => ['baz', 'qux']]]];
+        $request = $builder
+            ->setMethod(HttpMethod::POST())
+            ->setUri('http://example.com')
+            ->setJson($body)
+            ->build();
+
+        $this->assertEquals(
+            json_encode($body),
+            (string) $request->getBody()
+        );
+    }
 }

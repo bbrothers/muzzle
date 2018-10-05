@@ -20,6 +20,10 @@ trait RequestDecorator
         $this->request = $request;
     }
 
+    /**
+     * @param RequestInterface $request
+     * @return RequestInterface|AssertableRequest
+     */
     public static function fromBaseRequest(RequestInterface $request) : RequestInterface
     {
 

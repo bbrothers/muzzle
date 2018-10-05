@@ -23,78 +23,90 @@ Use the fluent builder to define a set of expected requests and mock responses:
 ```php
 $client = Muzzle::builder()
                 ->post('https://example.com/contact')
-                ->setBody(json_encode(['name' => 'Jane Doe'])
+                ->json(['name' => 'Jane Doe'])
                 ->replyWith(new Response(HttpStatus::CREATED))
                 ->get('https://example.com/contact')
-                ->setQuery(['name' => 'Jane Doe'])
+                ->query(['name' => 'Jane Doe'])
                 ->build();
 
 $this->assertInstanceOf(Muzzle::class, $client);
 $client->post('https://example.com');
 $client->get('https://example.com');
 ```
-If not specified, requests will default to a `GET` with an empty URI and responses will default to an empty `200`.
+If not specified responses will default to an empty `200`.
 
-The `enqueue` method can be used to pass pre-built requests/responses:
+The `expect` method can be used to pass pre-built `Exception` instances:
 ```php
-$request = new \GuzzleHttp\Psr7\Request(HttpMethod::GET, '/foo');
-$response = new \GuzzleHttp\Psr7\Response(HttpStatus::BAD_REQUEST);
+$createUser = (new Expectation)
+    ->post('users')
+    ->json(['name' => 'Jane', 'email' => 'j.doe@example.com'])
+    ->replyWith((new ResponseBuilder)->setJson(User::make([
+        'name' => 'Jane', 
+        'email' => 'j.doe@example.com'
+    ])->toArray());
 
-$client = Muzzle::builder()->enqueue($request, $response);
+$client = Muzzle::builder()->expect($createUser)->build();
 ```
 
 Expectations can also be added directly to the `Muzzle` instance by using the `append` method:
 ```php
 $client = new Muzzle;
-$transactions = [];
+$expectations = [];
 for ($i = 0; $i < 10; $i++) {
-    $transactions[] = (new Transaction)
-        ->setRequest((new RequestBuilder)->setQuery(['number' => $i])->build())
-        ->setResponse((new ResponseBuilder)->setBody(json_encode(['message' => "{$i} of 10"])->build());
+    $expectations[] = (new Expectation)
+        ->get("users/{$i}")
+        ->replyWith((new ResponseBuilder)->setJson(['number' => $i]));
 }
-$client->append(...$transactions);
+$client->append(...$expectations);
 ```
 
-`Muzzle` assertions should be run at the end of a test by calling the `makeAssertions` method.
-This can be automated by including the `MuzzleIntegration` trait in your test or base `TestCase` file. `Muzzle` stores a reference to all instances in the `Container` class, which allows us to call `Muzzle::close` to execute any outstanding assertions:
-```php
-class TestCase extends PHPUnit\Framework\TestCase
-{
-    use Muzzle\PHPUnit\MuzzleIntegrations;
-}
-``` 
-The container can also be cleared without running assertions using the `Muzzle::flush` method.
+By default `Muzzle` will expect that a request was made and return an empty `200` response.
 
-By default `Muzzle` will run assertions that:
-- assert all expected requests were made
-- assert the expected request URI matches the actual request URI (including a configured `base_uri`)
-- assert the expected request method matches the actual request method
-- assert the expected request query (if provided) is contained in the actual request query
-- assert the expected request body (if provided) is contained in the actual request body
-- assert the expected request headers (if provided) are contained in the actual request headers
+There are several pre-defined expectations available on the builder or `Expectation` class directly:
+- `method`: accepts a variadic list of HTTP methods and asserts the actual request method is in the provided list.
+- `uri`: accepts a URI, path or regex pattern to match the actual request against.
+- `headers`: accepts an array of headers. They can be either the header name or a key/value pair of header name/expected value and will assert that all headers match the provided values.
+- `query`: accepts an array of query parameters expected to be contained in the request. Parameters should be passed as an associative array of `[$name => $value]`, with the value optionally being a regex pattern.
+- `queryShouldEqual`: like `query` this method accepts an associative array of parameters, however these must match exactly (with the exception of the order) with the actual request.
+- `body`: accepts a string, array, `StreamInterface` instance or a regex pattern. If an array is given and the actual request is not json, it will `json_encode` the array and look for an exact match. If the actual request is JSON, it will decode it and use the same matching strategy as the `query` method, allowing for regex patterns as values. When a JSON string is provided, it will be decoded and treated the same as an array.
+- `json`: accepts an array and delegates to the `body` method.
+- `bodyShouldEqual`: accepts a string or string castable object, such as a `StreamInterface` instance, and asserts that it is an exact match to the actual request body.
+- `should`: accepts a `callable` and provides the actual request as an `AssertableRequest` instance and the `Muzzle` instance as parameters when invoking the `callable`. The `callable` is expected be a `void` return type, so any return value will be ignored. See below for details.
+ 
 
-Custom assertion rules can be added by implementing the `Assertion` interface and using `AssertionRules::push` or 
-`AssertionRules::unshift` to append or prepend the rule to the queue. The rules can be overwritten completely by calling the `AssertionRules::setAssertions` with a variadic list of rules:
+Custom assertion rules can be added to an `Expectation` by calling the `should` method with a `callable` that implements the `Assertion` interface. When the `Assertion` is run, the recorded request will be passed to the `__invkoke` method as an `AssertableRequest` instance. The `Muzzle` instance is also passed as an optional second parameter.
 ```php
-class JsonContains implements Assertion {
-   public function assert(Transaction $actual, Transaction $expected) : void
+class ContainJson implements Assertion {
+   public function __consturct(array $content) 
    {
-        $actual->response()->assertJson($expected->response()->json());
+       $this->expected = $expected;
+   }
+   public function __invoke(AssertableRequest $actual) : void
+   {
+        $actual->assertJson($this->expected);
    }
 }
 // then
 
-AssertionRules::push(JsonContains::class);
+(new Expectation)->should(new ContainJson(['name' => 'Jane Doe']));
+``` 
+Or as just a callback:
+```php
+$expected = ['name' => 'Jane Doe'];
+(new Expectation)->should(function (AssertableRequest $actual) use ($expected) : void {
+    $actual->assertJson($expected);
+});
 ``` 
 
 Additional assertions can also be run on any responses from `Muzzle` or on requests/responses from the transaction history:
 ```php
 $client = Muzzle::builder()
                 ->post('https://example.com/contact')
-                ->setBody(json_encode(['name' => 'Jane Doe'])
+                ->json(['name' => 'Jane Doe'])
                 ->replyWith(new Response(HttpStatus::CREATED))
                 ->get('http://example.com/contact')
-                ->setQuery(['name' => 'Jane Doe'])
+                ->query(['name' => 'Jane Doe'])
+                ->replyWith(new Response(HttpStatus::MOVED_PERMANENTLY))
                 ->build();
 
 $this->assertInstanceOf(Muzzle::class, $client);

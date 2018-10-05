@@ -2,10 +2,10 @@
 
 namespace Muzzle\Assertions;
 
-use Muzzle\Messages\Transaction;
+use Muzzle\Messages\AssertableRequest;
 
 interface Assertion
 {
 
-    public function assert(Transaction $actual, Transaction $expected) : void;
+    public function __invoke(AssertableRequest $actual) : void;
 }

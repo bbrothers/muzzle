@@ -2,14 +2,35 @@
 
 namespace Muzzle\Assertions;
 
-use Muzzle\Messages\Transaction;
+use Muzzle\Messages\AssertableRequest;
+use PHPUnit\Framework\Assert as PHPUnit;
 
 class MethodMatches implements Assertion
 {
 
-    public function assert(Transaction $actual, Transaction $expected) : void
+    /**
+     * @var string
+     */
+    private $methods;
+
+    public function __construct(string ...$methods)
     {
 
-        $actual->request()->assertMethod($expected->request()->getMethod());
+        $this->methods = array_map('strtoupper', $methods);
+    }
+
+    public function __invoke(AssertableRequest $actual) : void
+    {
+
+        PHPUnit::assertArrayHasKey(
+            $actual->getMethod(),
+            array_flip(array_map('strtoupper', $this->methods)),
+            sprintf(
+                'Expected HTTP method [%s]. Got [%s] for request to %s.',
+                implode(', ', array_map('strtoupper', $this->methods)),
+                $actual->getMethod(),
+                urldecode($actual->getUri())
+            )
+        );
     }
 }

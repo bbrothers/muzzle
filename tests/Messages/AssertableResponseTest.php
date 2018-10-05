@@ -116,4 +116,15 @@ class AssertableResponseTest extends TestCase
         $this->expectException(ExpectationFailedException::class);
         $response->assertHeader('content-type', 'text/html');
     }
+
+    /** @test */
+    public function itWillNotWrapAnInstanceOfItself()
+    {
+
+        $response = AssertableResponse::fromBaseResponse(
+            new Response(HttpStatus::OK, ['Content-Type' => 'application/json'])
+        );
+
+        $this->assertSame($response, AssertableResponse::fromBaseResponse($response));
+    }
 }

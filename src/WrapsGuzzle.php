@@ -81,15 +81,6 @@ trait WrapsGuzzle
     private function delegate(string $method, ...$arguments)
     {
 
-        try {
-            return $this->client->{$method}(...$arguments);
-        } catch (OutOfBoundsException $exception) {
-            PHPUnit::fail(sprintf(
-                'Mock queue was empty when calling [%s] with the arguments: %s',
-                $method,
-                CliFormatter::format(...$arguments)
-            ));
-            throw $exception; // @codeCoverageIgnore
-        }
+        return $this->client->{$method}(...$arguments);
     }
 }

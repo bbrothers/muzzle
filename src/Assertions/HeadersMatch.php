@@ -2,16 +2,32 @@
 
 namespace Muzzle\Assertions;
 
-use Muzzle\Messages\Transaction;
+use Illuminate\Support\Arr;
+use Muzzle\Messages\AssertableRequest;
 
 class HeadersMatch implements Assertion
 {
 
-    public function assert(Transaction $actual, Transaction $expected) : void
+    /**
+     * @var array
+     */
+    private $headers;
+
+    public function __construct(array $headers)
     {
 
-        foreach ($expected->request()->getHeaders() as $header => $value) {
-            $actual->request()->assertHeader($header, $value);
+        $this->headers = $headers;
+    }
+
+    public function __invoke(AssertableRequest $actual) : void
+    {
+
+        foreach ($this->headers as $header => $value) {
+            if (! Arr::isAssoc([$header => $value])) {
+                $header = $value;
+                $value = null;
+            }
+            $actual->assertHeader($header, $value);
         }
     }
 }

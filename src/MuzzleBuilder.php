@@ -3,11 +3,8 @@
 namespace Muzzle;
 
 use BadMethodCallException;
-use Exception;
 use GuzzleHttp\ClientInterface;
-use Muzzle\Messages\Transaction;
-use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
+use Illuminate\Support\Collection;
 
 /**
  * @method MuzzleBuilder connect(string $uri = '/')
@@ -19,6 +16,18 @@ use Psr\Http\Message\ResponseInterface;
  * @method MuzzleBuilder post(string $uri = '/')
  * @method MuzzleBuilder put(string $uri = '/')
  * @method MuzzleBuilder trace(string $uri = '/')
+ * @method MuzzleBuilder should(callable $assertion)
+ * @method MuzzleBuilder method(string ...$method)
+ * @method MuzzleBuilder uri(string $uri = '/')
+ * @method MuzzleBuilder headers(array $headers)
+ * @method MuzzleBuilder query(array $expected)
+ * @method MuzzleBuilder queryShouldEqual(array $expected)
+ * @method MuzzleBuilder body(string $uri = '/')
+ * @method MuzzleBuilder bodyShouldEqual($expected)
+ * @method MuzzleBuilder json(array $body)
+ * @method MuzzleBuilder replyWith($reply = null)
+ *
+ * @mixin Expectation
  */
 class MuzzleBuilder
 {
@@ -39,17 +48,17 @@ class MuzzleBuilder
     private $middleware = [];
 
     /**
-     * @var RequestBuilder
+     * @var Expectation
      */
     private $building;
 
-    public function __construct(Transactions $expectations = null)
+    public function __construct(Collection $expectations = null)
     {
 
-        $this->expectations = $expectations ?: new Transactions;
+        $this->expectations = $expectations ?: new Collection;
     }
 
-    public static function create(Transactions $transactions = null) : MuzzleBuilder
+    public static function create(Collection $transactions = null) : MuzzleBuilder
     {
 
         return new static($transactions);
@@ -71,31 +80,10 @@ class MuzzleBuilder
         return $this;
     }
 
-    /**
-     * @param RequestInterface|RequestBuilder $request
-     * @param ResponseInterface|ResponseBuilder|Exception $response
-     * @return MuzzleBuilder
-     */
-    public function enqueue($request, $response) : self
+    public function expect(Expectation $expectation) : self
     {
 
-        $transaction = new Transaction;
-        $transaction->setRequest($request instanceof RequestBuilder ? $request->build() : $request);
-        $transaction->setResponseOrError($response instanceof ResponseBuilder ? $response->build() : $response);
-
-        $this->expectations->push($transaction);
-
-        return $this;
-    }
-
-    public function buildRequest(HttpMethod $method, string $uri = '/') : MuzzleBuilder
-    {
-
-        $builder = new RequestBuilder($method, $uri);
-        if ($this->building) {
-            $this->enqueue($this->building, $this->building->reply());
-        }
-        $this->building = $builder;
+        $this->expectations->push($expectation);
 
         return $this;
     }
@@ -103,10 +91,7 @@ class MuzzleBuilder
     public function build(array $options = []) : Muzzle
     {
 
-        if ($this->building) {
-            $this->enqueue($this->building, $this->building->reply());
-            $this->building = null;
-        }
+        $this->closeBuilder();
         $this->withOptions($options);
 
 
@@ -130,77 +115,37 @@ class MuzzleBuilder
         return $muzzle;
     }
 
-    private function builder() : RequestBuilder
+    private function builder() : Expectation
     {
 
         if (! $this->building) {
-            $this->building = new RequestBuilder;
+            $this->building = new Expectation;
         }
 
         return $this->building;
     }
 
-    public function setMethod(HttpMethod $method) : MuzzleBuilder
+    private function closeBuilder() : void
     {
 
-        $this->builder()->setMethod($method);
-
-        return $this;
-    }
-
-    public function setUri(?string $uri) : MuzzleBuilder
-    {
-
-        $this->builder()->setUri($uri);
-
-        return $this;
-    }
-
-    public function setHeaders(array $headers = []) : MuzzleBuilder
-    {
-
-        $this->builder()->setHeaders($headers);
-
-        return $this;
-    }
-
-    public function setBody($body) : MuzzleBuilder
-    {
-
-        $this->builder()->setBody($body);
-
-        return $this;
-    }
-
-    public function setJson(array $body) : MuzzleBuilder
-    {
-
-        $this->builder()->setJson($body);
-
-        return $this;
-    }
-
-    public function setQuery(array $query = []) : MuzzleBuilder
-    {
-
-        $this->builder()->setQuery($query);
-
-        return $this;
-    }
-
-    public function replyWith($reply = null) : MuzzleBuilder
-    {
-
-        $this->builder()->replyWith($reply);
-
-        return $this;
+        if ($this->building) {
+            $this->expect($this->building);
+            $this->building = null;
+        }
     }
 
     public function __call($method, $parameters)
     {
 
         if (HttpMethod::isValid($method)) {
-            return $this->buildRequest(new HttpMethod($method), ...$parameters);
+            $this->closeBuilder();
+            $this->builder()->method($method)->uri(...$parameters ?: ['/']);
+            return $this;
+        }
+
+        if (is_callable([$this->builder(), $method])) {
+            $this->builder()->{$method}(...$parameters);
+            return $this;
         }
 
         throw new BadMethodCallException(sprintf('The method %s is not defined.', $method));

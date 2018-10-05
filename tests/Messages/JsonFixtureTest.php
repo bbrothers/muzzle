@@ -90,13 +90,15 @@ class JsonFixtureTest extends TestCase
         $fixture = new JsonFixture(HttpMethod::GET, [], json_encode([
             'foo' => 'bar',
             'baz' => 'qux',
-            'a' => 'b',
+            'a' => ['b' => 'c'],
+            'should' => 'exclude',
         ]));
 
-        $this->assertSame([
+        $this->assertEquals([
             'foo' => 'bar',
             'baz' => 'qux',
-        ], $fixture->only(['foo', 'baz']));
+            'a' => ['b' => 'c'],
+        ], $fixture->only(['foo', 'baz', 'a.b']));
     }
 
     /** @test */

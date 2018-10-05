@@ -20,14 +20,16 @@ class MuzzleTest extends TestCase
 
         $client = new Muzzle;
         $client->append(
-            Transaction::new()
-                       ->setRequest(new Request(HttpMethod::POST, 'https://example.com'))
-                       ->setResponse(new Response(HttpStatus::CREATED))
+            (new Expectation)
+                ->method(HttpMethod::POST)
+                ->uri('https://example.com')
+                ->replyWith(new Response(HttpStatus::CREATED))
         );
         $client->append(
-            Transaction::new()
-                       ->setRequest(new Request(HttpMethod::GET, 'https://example.com'))
-                       ->setResponse(new Response(HttpStatus::OK))
+            (new Expectation)
+                ->method(HttpMethod::GET)
+                ->uri('https://example.com')
+                ->replyWith(new Response(HttpStatus::OK))
         );
 
         $client->addMiddleware(new Decodable);
@@ -45,7 +47,7 @@ class MuzzleTest extends TestCase
                         ->post('https://example.com')
                         ->replyWith(new Response(HttpStatus::CREATED))
                         ->get('https://example.com')
-                        ->setQuery(['foo' => 'bar'])
+                        ->query(['foo' => 'bar'])
                         ->build();
 
         $this->assertInstanceOf(Muzzle::class, $client);
@@ -84,19 +86,6 @@ class MuzzleTest extends TestCase
     }
 
     /** @test */
-    public function itCanFlushTheContainer()
-    {
-
-        $client = Muzzle::builder()->get('https://example.com')->build();
-
-        $client->post('https://foo.com', []);
-
-        $client->flush();
-
-        $this->assertEmpty(Muzzle::container());
-    }
-
-    /** @test */
     public function itCanGetTheLastRequest()
     {
 
@@ -106,7 +95,6 @@ class MuzzleTest extends TestCase
         $muzzle->setHistory(new Transactions([new Transaction, $transaction]));
 
         $this->assertSame($request, $muzzle->lastRequest());
-        Muzzle::flush();
     }
 
     /** @test */
@@ -119,6 +107,5 @@ class MuzzleTest extends TestCase
         $muzzle->setHistory(new Transactions([$transaction, new Transaction]));
 
         $this->assertSame($request, $muzzle->firstRequest());
-        Muzzle::flush();
     }
 }
