@@ -3,16 +3,19 @@
 namespace Muzzle;
 
 use Exception;
+use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Stream;
 use GuzzleHttp\TransferStats;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 class MockHandlerTest extends TestCase
 {
 
-    public function testReturnsMockResponse()
+    /** @test */
+    public function itReturnsMockResponse()
     {
 
         $res = new Response;
@@ -22,7 +25,8 @@ class MockHandlerTest extends TestCase
         $this->assertSame($res, $promise->wait());
     }
 
-    public function testIsCountable()
+    /** @test */
+    public function itIsCountable()
     {
 
         $res = new Response();
@@ -30,24 +34,23 @@ class MockHandlerTest extends TestCase
         $this->assertCount(2, $mock);
     }
 
-    public function testEmptyHandlerIsCountable()
+    /** @test */
+    public function itEmptyHandlerIsCountable()
     {
 
         $this->assertCount(0, new MockHandler());
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
-    public function testEnsuresEachAppendIsValid()
+    /** @test */
+    public function itEnsuresEachAppendIsValid()
     {
 
-        $mock = new MockHandler(['a']);
-        $request = new Request('GET', 'http://example.com');
-        $mock($request, []);
+        $this->expectException(InvalidArgumentException::class);
+        new MockHandler(['a']);
     }
 
-    public function testCanQueueExceptions()
+    /** @test */
+    public function itCanQueueExceptions()
     {
 
         $exception = new Exception('a');
@@ -62,7 +65,8 @@ class MockHandlerTest extends TestCase
         }
     }
 
-    public function testSinkFilename()
+    /** @test */
+    public function itSinkFilename()
     {
 
         $filename = sys_get_temp_dir() . '/mock_test_' . uniqid();
@@ -78,7 +82,8 @@ class MockHandlerTest extends TestCase
         unlink($filename);
     }
 
-    public function testSinkResource()
+    /** @test */
+    public function itSinkResource()
     {
 
         $file = tmpfile();
@@ -93,7 +98,8 @@ class MockHandlerTest extends TestCase
         $this->assertStringEqualsFile($meta['uri'], 'TEST CONTENT');
     }
 
-    public function testSinkStream()
+    /** @test */
+    public function itSinkStream()
     {
 
         $stream = new Stream(tmpfile());
@@ -107,7 +113,8 @@ class MockHandlerTest extends TestCase
         $this->assertStringEqualsFile($stream->getMetadata('uri'), 'TEST CONTENT');
     }
 
-    public function testCanEnqueueCallables()
+    /** @test */
+    public function itCanEnqueueCallables()
     {
 
         $response = new Response;
@@ -115,31 +122,26 @@ class MockHandlerTest extends TestCase
             function () use ($response) {
 
                 return $response;
-            }
+            },
         ]);
         $request = new Request('GET', 'http://example.com');
         $promise = $mock($request, ['foo' => 'bar']);
         $this->assertSame($response, $promise->wait());
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
-    public function testEnsuresOnHeadersIsCallable()
+    /** @test */
+    public function itEnsuresOnHeadersIsCallable()
     {
 
         $res = new Response;
         $mock = new MockHandler([$res]);
         $request = new Request('GET', 'http://example.com');
+        $this->expectException(InvalidArgumentException::class);
         $mock($request, ['on_headers' => 'error!']);
     }
 
-    /**
-     * @expectedException \GuzzleHttp\Exception\RequestException
-     * @expectedExceptionMessage An error was encountered during the on_headers event
-     * @expectedExceptionMessage test
-     */
-    public function testRejectsPromiseWhenOnHeadersFails()
+    /** @test */
+    public function itRejectsPromiseWhenOnHeadersFails()
     {
 
         $res = new Response();
@@ -149,24 +151,26 @@ class MockHandlerTest extends TestCase
             'on_headers' => function () {
 
                 throw new Exception('test');
-            }
+            },
         ]);
 
+        $this->expectException(RequestException::class);
+        $this->expectExceptionMessage('An error was encountered during the on_headers event');
         $promise->wait();
     }
 
-    /**
-     * @expectedException \OutOfBoundsException
-     */
-    public function testThrowsWhenNoMoreResponses()
+    /** @test */
+    public function itThrowsWhenNoMoreResponses()
     {
 
         $mock = new MockHandler();
         $request = new Request('GET', 'http://example.com');
+        $this->expectException(UnexpectedRequestWasMade::class);
         $mock($request, []);
     }
 
-    public function testInvokesOnStatsFunctionForResponse()
+    /** @test */
+    public function itInvokesOnStatsFunctionForResponse()
     {
 
         $res = new Response();
@@ -183,7 +187,8 @@ class MockHandlerTest extends TestCase
         $this->assertSame($request, $stats->getRequest());
     }
 
-    public function testInvokesOnStatsFunctionForError()
+    /** @test */
+    public function itInvokesOnStatsFunctionForError()
     {
 
         $exception = new Exception('a');
@@ -199,4 +204,37 @@ class MockHandlerTest extends TestCase
         $this->assertNull($stats->getResponse());
         $this->assertSame($request, $stats->getRequest());
     }
+
+    /** @test */
+    public function itAppliesADelayToTheResponse() : void
+    {
+
+        global $delay;
+        function usleep($milliseconds)
+        {
+
+            global $delay;
+            $delay = $milliseconds;
+        }
+
+        $handler = new MockHandler([new Response]);
+        $request = new Request('GET', 'http://example.com');
+
+        $handler($request, ['delay' => 5]);
+
+        $this->assertEquals(5000, $delay);
+        unset($delay);
+    }
+
+    /** @test */
+    public function itThrowsAnExceptionIfTheOnHeadersOptionIsNotCallable() : void
+    {
+
+        $handler = new MockHandler([new Response]);
+        $request = new Request('GET', 'http://example.com');
+
+        $this->expectException(ValueNotCallable::class);
+        $handler($request, ['on_headers' => 'not callable']);
+    }
 }
+

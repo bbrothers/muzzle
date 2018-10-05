@@ -7,22 +7,22 @@ use Countable;
 use Exception;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Promise\PromiseInterface;
+use GuzzleHttp\RequestOptions;
 use GuzzleHttp\TransferStats;
 use Illuminate\Support\Collection;
-use InvalidArgumentException;
 use Muzzle\Messages\AssertableRequest;
-use OutOfBoundsException;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
-use SplQueue;
-use function GuzzleHttp\describe_type;
 use function GuzzleHttp\Promise\promise_for;
 use function GuzzleHttp\Promise\rejection_for;
 
 class MockHandler implements Countable
 {
 
+    /**
+     * @var ResponseQueue
+     */
     private $queue;
     /**
      * @var array
@@ -38,35 +38,17 @@ class MockHandler implements Countable
      * @param Collection $expectations
      * @param Muzzle $muzzle
      */
-    public function __construct(
-        array $queue = [],
-        Collection $expectations = null,
-        Muzzle $muzzle = null
-    ) {
+    public function __construct(array $queue = [], Collection $expectations = null, Muzzle $muzzle = null)
+    {
 
-        $this->queue = new SplQueue;
+        $this->queue = new ResponseQueue;
         $this->expectations = $expectations ?: new Collection;
         $this->muzzle = $muzzle;
         $this->append(...$queue);
     }
 
-    public function __invoke(RequestInterface $request, array $options)
+    public function __invoke(RequestInterface $request, array $options) : PromiseInterface
     {
-
-        $this->applyDelay($options);
-
-        $expectation = $this->expectations->shift() ?: new Expectation;
-
-        foreach ($expectation->assertions() as $assertion) {
-            $assertion(
-                AssertableRequest::fromBaseRequest($request),
-                $this->muzzle ?: new Muzzle
-            );
-        }
-
-        if ($this->queue->isEmpty()) {
-            throw new OutOfBoundsException('Mock queue is empty');
-        }
 
         return $this->resolveResponse($request, $options)->then(
             $this->onFulfilled($request, $options),
@@ -83,7 +65,6 @@ class MockHandler implements Countable
     {
 
         foreach ($responses as $value) {
-            $this->assertQueueableResponse($value);
             $this->queue->enqueue($value);
         }
     }
@@ -99,7 +80,7 @@ class MockHandler implements Countable
     public function count() : int
     {
 
-        return count($this->queue);
+        return $this->queue->count();
     }
 
     public function setMuzzle(Muzzle $muzzle) : self
@@ -108,6 +89,19 @@ class MockHandler implements Countable
         $this->muzzle = $muzzle;
 
         return $this;
+    }
+
+    private function compareAgainstExpectations(RequestInterface $request) : void
+    {
+
+        $expectation = $this->expectations->shift() ?: new Expectation;
+
+        foreach ($expectation->assertions() as $assertion) {
+            $assertion(
+                AssertableRequest::fromBaseRequest($request),
+                $this->muzzle ?: new Muzzle
+            );
+        }
     }
 
     /**
@@ -150,34 +144,12 @@ class MockHandler implements Countable
         $reason = null
     ) : void {
 
-        if (! isset($options['on_stats'])) {
+        if (! isset($options[RequestOptions::ON_STATS])) {
             return;
         }
 
         $stats = new TransferStats($request, $response, $options['tx_time'] ?? 0, $reason);
-        $options['on_stats']($stats);
-    }
-
-    /**
-     * @param $value
-     */
-    private function assertQueueableResponse($value) : void
-    {
-
-        if (! $this->isQueueableResponse($value)) {
-            throw new InvalidArgumentException(
-                'Expected a response or exception. Found ' . describe_type($value)
-            );
-        }
-    }
-
-    private function isQueueableResponse($value) : bool
-    {
-
-        return $value instanceof ResponseInterface
-               || $value instanceof Exception
-               || $value instanceof PromiseInterface
-               || is_callable($value);
+        $options[RequestOptions::ON_STATS]($stats);
     }
 
     /**
@@ -189,16 +161,16 @@ class MockHandler implements Countable
     private function onHeadersEvent(RequestInterface $request, array $options, $response)
     {
 
-        if (! isset($options['on_headers'])) {
+        if (! isset($options[RequestOptions::ON_HEADERS])) {
             return $response;
         }
 
-        if (! is_callable($options['on_headers'])) {
-            throw new InvalidArgumentException('on_headers must be callable');
+        if (! is_callable($options[RequestOptions::ON_HEADERS])) {
+            throw ValueNotCallable::onHeaders($options[RequestOptions::ON_HEADERS]);
         }
 
         try {
-            $options['on_headers']($response);
+            $options[RequestOptions::ON_HEADERS]($response);
         } catch (Exception $exception) {
             $message = 'An error was encountered during the on_headers event';
             $response = new RequestException($message, $request, $response, $exception);
@@ -210,12 +182,12 @@ class MockHandler implements Countable
     public function sink(ResponseInterface $value, array $options = []) : void
     {
 
-        if (! isset($options['sink'])) {
+        if (! isset($options[RequestOptions::SINK])) {
             return;
         }
 
         $contents = (string) $value->getBody();
-        $sink = $options['sink'];
+        $sink = $options[RequestOptions::SINK];
 
         if (is_resource($sink)) {
             fwrite($sink, $contents);
@@ -229,15 +201,23 @@ class MockHandler implements Countable
     private function applyDelay(array $options) : void
     {
 
-        if (isset($options['delay'])) {
-            usleep($options['delay'] * 1000);
+        if (isset($options[RequestOptions::DELAY])) {
+            usleep($options[RequestOptions::DELAY] * 1000);
         }
     }
 
     private function resolveResponse(RequestInterface $request, array $options) : PromiseInterface
     {
 
-        $response = $this->queue->shift();
+        $this->applyDelay($options);
+
+        $this->compareAgainstExpectations($request);
+
+        if ($this->queue->isEmpty()) {
+            throw UnexpectedRequestWasMade::fromRequest($request);
+        }
+
+        $response = $this->queue->dequeue();
         $response = $this->onHeadersEvent($request, $options, $response);
 
         if (is_callable($response)) {
