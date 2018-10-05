@@ -10,6 +10,7 @@ use GuzzleHttp\Psr7\Stream;
 use GuzzleHttp\TransferStats;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
+use TypeError;
 
 class MockHandlerTest extends TestCase
 {
@@ -18,18 +19,18 @@ class MockHandlerTest extends TestCase
     public function itReturnsMockResponse()
     {
 
-        $res = new Response;
-        $mock = new MockHandler([$res]);
+        $expectation = (new Expectation)->replyWith(new Response);
+        $mock = new MockHandler([$expectation]);
         $request = new Request('GET', 'http://example.com');
         $promise = $mock($request, []);
-        $this->assertSame($res, $promise->wait());
+        $this->assertSame($expectation->reply(), $promise->wait());
     }
 
     /** @test */
     public function itIsCountable()
     {
 
-        $res = new Response();
+        $res = (new Expectation)->replyWith(new Response);
         $mock = new MockHandler([$res, $res]);
         $this->assertCount(2, $mock);
     }
@@ -45,7 +46,7 @@ class MockHandlerTest extends TestCase
     public function itEnsuresEachAppendIsValid()
     {
 
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(TypeError::class);
         new MockHandler(['a']);
     }
 
@@ -53,15 +54,15 @@ class MockHandlerTest extends TestCase
     public function itCanQueueExceptions()
     {
 
-        $exception = new Exception('a');
-        $mock = new MockHandler([$exception]);
+        $expectation = (new Expectation)->replyWith(new Exception('a'));
+        $mock = new MockHandler([$expectation]);
         $request = new Request('GET', 'http://example.com');
         $promise = $mock($request, []);
         try {
             $promise->wait();
             $this->fail();
         } catch (Exception $e2) {
-            $this->assertSame($exception, $e2);
+            $this->assertSame($expectation->reply(), $e2);
         }
     }
 
@@ -70,7 +71,7 @@ class MockHandlerTest extends TestCase
     {
 
         $filename = sys_get_temp_dir() . '/mock_test_' . uniqid();
-        $res = new Response(200, [], 'TEST CONTENT');
+        $res = (new Expectation)->replyWith(new Response(200, [], 'TEST CONTENT'));
         $mock = new MockHandler([$res]);
         $request = new Request('GET', '/');
         $promise = $mock($request, ['sink' => $filename]);
@@ -88,7 +89,7 @@ class MockHandlerTest extends TestCase
 
         $file = tmpfile();
         $meta = stream_get_meta_data($file);
-        $res = new Response(200, [], 'TEST CONTENT');
+        $res = (new Expectation)->replyWith(new Response(200, [], 'TEST CONTENT'));
         $mock = new MockHandler([$res]);
         $request = new Request('GET', '/');
         $promise = $mock($request, ['sink' => $file]);
@@ -103,7 +104,7 @@ class MockHandlerTest extends TestCase
     {
 
         $stream = new Stream(tmpfile());
-        $res = new Response(200, [], 'TEST CONTENT');
+        $res = (new Expectation)->replyWith(new Response(200, [], 'TEST CONTENT'));
         $mock = new MockHandler([$res]);
         $request = new Request('GET', '/');
         $promise = $mock($request, ['sink' => $stream]);
@@ -118,12 +119,11 @@ class MockHandlerTest extends TestCase
     {
 
         $response = new Response;
-        $mock = new MockHandler([
-            function () use ($response) {
+        $expectation = (new Expectation)->replyWith(function () use ($response) {
 
-                return $response;
-            },
-        ]);
+            return $response;
+        });
+        $mock = new MockHandler([$expectation]);
         $request = new Request('GET', 'http://example.com');
         $promise = $mock($request, ['foo' => 'bar']);
         $this->assertSame($response, $promise->wait());
@@ -133,7 +133,7 @@ class MockHandlerTest extends TestCase
     public function itEnsuresOnHeadersIsCallable()
     {
 
-        $res = new Response;
+        $res = (new Expectation)->replyWith(new Response);
         $mock = new MockHandler([$res]);
         $request = new Request('GET', 'http://example.com');
         $this->expectException(InvalidArgumentException::class);
@@ -144,7 +144,7 @@ class MockHandlerTest extends TestCase
     public function itRejectsPromiseWhenOnHeadersFails()
     {
 
-        $res = new Response();
+        $res = (new Expectation)->replyWith(new Response);
         $mock = new MockHandler([$res]);
         $request = new Request('GET', 'http://example.com');
         $promise = $mock($request, [
@@ -173,8 +173,8 @@ class MockHandlerTest extends TestCase
     public function itInvokesOnStatsFunctionForResponse()
     {
 
-        $res = new Response();
-        $mock = new MockHandler([$res]);
+        $expectation = (new Expectation)->replyWith(new Response);
+        $mock = new MockHandler([$expectation]);
         $request = new Request('GET', 'http://example.com');
         $stats = null;
         $onStats = function (TransferStats $transferStats) use (&$stats) {
@@ -183,7 +183,7 @@ class MockHandlerTest extends TestCase
         };
         $promise = $mock($request, ['on_stats' => $onStats]);
         $promise->wait();
-        $this->assertSame($res, $stats->getResponse());
+        $this->assertSame($expectation->reply(), $stats->getResponse());
         $this->assertSame($request, $stats->getRequest());
     }
 
@@ -191,8 +191,8 @@ class MockHandlerTest extends TestCase
     public function itInvokesOnStatsFunctionForError()
     {
 
-        $exception = new Exception('a');
-        $mock = new MockHandler([$exception]);
+        $expectation = (new Expectation)->replyWith(new Exception('a'));
+        $mock = new MockHandler([$expectation]);
         $request = new Request('GET', 'http://example.com');
         $stats = null;
         $onStats = function (TransferStats $transferStats) use (&$stats) {
@@ -200,7 +200,7 @@ class MockHandlerTest extends TestCase
             $stats = $transferStats;
         };
         $mock($request, ['on_stats' => $onStats])->wait(false);
-        $this->assertSame($exception, $stats->getHandlerErrorData());
+        $this->assertSame($expectation->reply(), $stats->getHandlerErrorData());
         $this->assertNull($stats->getResponse());
         $this->assertSame($request, $stats->getRequest());
     }
@@ -217,7 +217,7 @@ class MockHandlerTest extends TestCase
             $delay = $milliseconds;
         }
 
-        $handler = new MockHandler([new Response]);
+        $handler = new MockHandler([(new Expectation)->replyWith(new Response)]);
         $request = new Request('GET', 'http://example.com');
 
         $handler($request, ['delay' => 5]);
@@ -230,11 +230,10 @@ class MockHandlerTest extends TestCase
     public function itThrowsAnExceptionIfTheOnHeadersOptionIsNotCallable() : void
     {
 
-        $handler = new MockHandler([new Response]);
+        $handler = new MockHandler([(new Expectation)->replyWith(new Response)]);
         $request = new Request('GET', 'http://example.com');
 
         $this->expectException(ValueNotCallable::class);
         $handler($request, ['on_headers' => 'not callable']);
     }
 }
-

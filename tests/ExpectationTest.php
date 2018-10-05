@@ -2,7 +2,6 @@
 
 namespace Muzzle;
 
-use Muzzle\Assertions\ExpectedRequestWasMade;
 use Muzzle\Assertions\MethodMatches;
 use Muzzle\Assertions\UriPathMatches;
 use PHPUnit\Framework\TestCase;
@@ -25,11 +24,6 @@ class ExpectationTest extends TestCase
             new UriPathMatches('/'),
             $expectation->assertion('uri')
         );
-
-        $this->assertInstanceOf(
-            ExpectedRequestWasMade::class,
-            $expectation->assertion('happened')
-        );
     }
 
     /** @test */
@@ -43,7 +37,14 @@ class ExpectationTest extends TestCase
             $expectation->{$method}(null);
         }
 
-        $this->assertCount(1, $expectation->assertions());
-        $this->assertInstanceOf(ExpectedRequestWasMade::class, $expectation->assertions()[0]);
+        $this->assertEmpty($expectation->assertions());
+    }
+
+    /** @test */
+    public function itWillThrowAnErrorIfAnInvalidReplyValueIsGiven() : void
+    {
+
+        $this->expectException(InvalidResponseProvided::class);
+        (new Expectation)->replyWith('invalid');
     }
 }

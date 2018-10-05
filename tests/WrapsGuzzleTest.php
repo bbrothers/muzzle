@@ -89,19 +89,6 @@ class WrapsGuzzleTest extends TestCase
         $wrapped->unDefinedMethod();
     }
 
-    /** @test */
-    public function itConvertsAnOutOfBoundsExceptionToAFail()
-    {
-
-        $client = $this->prophesize(ClientInterface::class);
-        $request = new Request(HttpMethod::GET, '/');
-        $client->send($request, [])->willThrow(new OutOfBoundsException);
-
-        $wrapped = $this->wrap($client->reveal());
-        $this->expectException(AssertionFailedError::class);
-        $wrapped->send($request, []);
-    }
-
     private function wrap(ClientInterface $client) : ClientInterface
     {
 

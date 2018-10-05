@@ -77,7 +77,6 @@ class Muzzle implements ClientInterface
 
         foreach ($expectations as $expectation) {
             $this->expectations->push($expectation);
-            $this->handler->append($expectation->reply());
             $this->handler->expect($expectation);
         }
 

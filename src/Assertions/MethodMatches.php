@@ -33,10 +33,4 @@ class MethodMatches implements Assertion
             )
         );
     }
-
-    public function methods() : array
-    {
-
-        return $this->methods;
-    }
 }

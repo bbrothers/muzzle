@@ -2,10 +2,11 @@
 
 namespace Muzzle;
 
+use Exception;
+use GuzzleHttp\Promise\PromiseInterface;
 use Muzzle\Assertions\Assertion;
 use Muzzle\Assertions\BodyMatches;
 use Muzzle\Assertions\CallbackAssertion;
-use Muzzle\Assertions\ExpectedRequestWasMade;
 use Muzzle\Assertions\HeadersMatch;
 use Muzzle\Assertions\MethodMatches;
 use Muzzle\Assertions\QueryContains;
@@ -41,8 +42,6 @@ class Expectation
         array $headers = [],
         $body = null
     ) {
-
-        $this->assertions['happened'] = new ExpectedRequestWasMade($this);
 
         $this->method($method);
         $this->uri($uri);
@@ -180,18 +179,22 @@ class Expectation
     public function replyWith($reply = null) : self
     {
 
+        if ($reply and ! $this->isQueueableResponse($reply)) {
+            throw InvalidResponseProvided::fromValue($reply);
+        }
+
         $this->reply = $reply ?: new ResponseBuilder;
 
         return $this;
     }
 
-    public function __toString() : string
+    private function isQueueableResponse($value) : bool
     {
 
-        $methods = $this->assertion('method') ? $this->assertion('method')->methods() : [];
-
-        $uri = $this->assertion('uri') ? $this->assertion('uri')->uri(new Muzzle) : null;
-
-        return sprintf('[%s]%s', implode(', ', $methods), $uri);
+        return $value instanceof ResponseInterface
+               || $value instanceof ResponseBuilder
+               || $value instanceof Exception
+               || $value instanceof PromiseInterface
+               || is_callable($value);
     }
 }

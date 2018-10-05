@@ -16,16 +16,13 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 use function GuzzleHttp\Promise\promise_for;
 use function GuzzleHttp\Promise\rejection_for;
+use SplQueue;
 
 class MockHandler implements Countable
 {
 
     /**
-     * @var ResponseQueue
-     */
-    private $queue;
-    /**
-     * @var array
+     * @var SplQueue
      */
     private $expectations;
     /**
@@ -34,17 +31,15 @@ class MockHandler implements Countable
     private $muzzle;
 
     /**
-     * @param ResponseInterface[]|Exception[]|PromiseInterface[]|callable[] $queue
-     * @param Collection $expectations
+     * @param iterable $expectations
      * @param Muzzle $muzzle
      */
-    public function __construct(array $queue = [], Collection $expectations = null, Muzzle $muzzle = null)
+    public function __construct(iterable $expectations = [], Muzzle $muzzle = null)
     {
 
-        $this->queue = new ResponseQueue;
-        $this->expectations = $expectations ?: new Collection;
+        $this->expectations = new SplQueue;
+        $this->expect(...$expectations);
         $this->muzzle = $muzzle;
-        $this->append(...$queue);
     }
 
     public function __invoke(RequestInterface $request, array $options) : PromiseInterface
@@ -56,31 +51,18 @@ class MockHandler implements Countable
         );
     }
 
-    /**
-     * Adds one or more variadic requests, exceptions, callables, or promises
-     * to the queue.
-     * @param array $responses
-     */
-    public function append(...$responses) : void
-    {
-
-        foreach ($responses as $value) {
-            $this->queue->enqueue($value);
-        }
-    }
-
     public function expect(Expectation ...$expectations) : void
     {
 
         foreach ($expectations as $expectation) {
-            $this->expectations->push($expectation);
+            $this->expectations->enqueue($expectation);
         }
     }
 
     public function count() : int
     {
 
-        return $this->queue->count();
+        return $this->expectations->count();
     }
 
     public function setMuzzle(Muzzle $muzzle) : self
@@ -91,10 +73,14 @@ class MockHandler implements Countable
         return $this;
     }
 
-    private function compareAgainstExpectations(RequestInterface $request) : void
+    private function compareAgainstExpectations(RequestInterface $request) : Expectation
     {
 
-        $expectation = $this->expectations->shift() ?: new Expectation;
+        if ($this->expectations->isEmpty()) {
+            throw UnexpectedRequestWasMade::fromRequest($request);
+        }
+
+        $expectation = $this->expectations->dequeue();
 
         foreach ($expectation->assertions() as $assertion) {
             $assertion(
@@ -102,6 +88,8 @@ class MockHandler implements Countable
                 $this->muzzle ?: new Muzzle
             );
         }
+
+        return $expectation;
     }
 
     /**
@@ -211,14 +199,8 @@ class MockHandler implements Countable
 
         $this->applyDelay($options);
 
-        $this->compareAgainstExpectations($request);
-
-        if ($this->queue->isEmpty()) {
-            throw UnexpectedRequestWasMade::fromRequest($request);
-        }
-
-        $response = $this->queue->dequeue();
-        $response = $this->onHeadersEvent($request, $options, $response);
+        $expectation = $this->compareAgainstExpectations($request);
+        $response = $this->onHeadersEvent($request, $options, $expectation->reply());
 
         if (is_callable($response)) {
             $response = $response($request, $options);
