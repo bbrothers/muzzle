@@ -5,10 +5,10 @@ namespace Muzzle\Assertions;
 use GuzzleHttp\Psr7\Uri;
 use GuzzleHttp\Psr7\UriResolver;
 use Illuminate\Support\Str;
-use function Muzzle\is_regex;
 use Muzzle\Messages\AssertableRequest;
 use Muzzle\Muzzle;
 use PHPUnit\Framework\Assert as PHPUnit;
+use function Muzzle\is_regex;
 
 class UriPathMatches implements Assertion
 {
@@ -31,14 +31,11 @@ class UriPathMatches implements Assertion
             return;
         }
 
-        PHPUnit::assertTrue(
-            Str::is($expectedPath, $actual->getUri()->getPath()),
-            sprintf(
-                'The request path [%s] does not match the expectation [%s].',
-                urldecode($actual->getUri()->getPath()),
-                $expectedPath
-            )
-        );
+        PHPUnit::assertTrue(Str::is($expectedPath, $actual->getUri()->getPath()), sprintf(
+            'The request path [%s] does not match the expectation [%s].',
+            urldecode($actual->getUri()->getPath()),
+            $expectedPath
+        ));
     }
 
     public function uri(Muzzle $muzzle) : string
@@ -53,14 +50,10 @@ class UriPathMatches implements Assertion
     private function assertMatchesPattern(AssertableRequest $actual, string $expectedPath) : void
     {
 
-        PHPUnit::assertRegExp(
-            $expectedPath,
-            $actual->getUri()->getPath(),
-            sprintf(
-                'The request path [%s] does not match the expected pattern [%s].',
-                urldecode($actual->getUri()->getPath()),
-                $expectedPath
-            )
-        );
+        PHPUnit::assertRegExp($expectedPath, $actual->getUri()->getPath(), sprintf(
+            'The request path [%s] does not match the expected pattern [%s].',
+            urldecode($actual->getUri()->getPath()),
+            $expectedPath
+        ));
     }
 }

@@ -39,34 +39,6 @@ class BodyMatches implements Assertion
 
         $body = is_string($this->body) ? json_decode($this->body, true) : (array) $this->body;
 
-        $this->assertArrayMatches($body, $decoded);
-    }
-
-    /**
-     * @param $body
-     * @param $decoded
-     */
-    private function assertArrayMatches($body, $decoded) : void
-    {
-
-        foreach ($body as $key => $value) {
-            PHPUnit::assertArrayHasKey(
-                $key,
-                $decoded,
-                "The body does not contain contain the expected key [{$key}]."
-            );
-
-            if (is_regex($value)) {
-                PHPUnit::assertRegExp($value, $decoded[$key]);
-                continue;
-            }
-
-            if (is_array($value) and is_array($decoded[$key])) {
-                $this->assertArrayMatches($value, $decoded[$key]);
-                continue;
-            }
-
-            PHPUnit::assertEquals($value, $decoded[$key]);
-        }
+        Assert::assertArraysMatch($body, $decoded);
     }
 }
