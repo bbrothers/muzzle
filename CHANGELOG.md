@@ -4,6 +4,20 @@ All notable changes to `Muzzle` will be documented in this file.
 
 Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) principles.
 
+## [0.3.1] - 2018-12-06
+
+### Added
+- Nothing
+
+### Fixed
+- overrode `fromBaseResponse` on fixture class to call `fromResponse` to fix issue on `with` calls
+
+### Removed
+- Nothing
+
+### Security
+- Nothing
+
 ## [0.3.0] - 2018-10-04
 
 ### Added

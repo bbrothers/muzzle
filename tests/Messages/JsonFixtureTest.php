@@ -3,7 +3,7 @@
 namespace Muzzle\Messages;
 
 use GuzzleHttp\Psr7\Response;
-use Muzzle\HttpMethod;
+use Muzzle\HttpStatus;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\StreamInterface;
 
@@ -15,7 +15,7 @@ class JsonFixtureTest extends TestCase
     public function itCanBeCreatedFromAResponseInstance()
     {
 
-        $fixture = JsonFixture::fromResponse(new Response);
+        $fixture = JsonFixture::fromBaseResponse(new Response);
         $this->assertInstanceOf(JsonFixture::class, $fixture);
     }
 
@@ -23,7 +23,7 @@ class JsonFixtureTest extends TestCase
     public function itMakesTheBodyOfAJsonResponseArrayAccessible()
     {
 
-        $fixture = new JsonFixture(HttpMethod::GET, [], json_encode(['data' => ['foo' => 'bar']]));
+        $fixture = new JsonFixture(HttpStatus::OK, [], json_encode(['data' => ['foo' => 'bar']]));
 
         $this->assertSame('bar', $fixture['data.foo']);
     }
@@ -32,7 +32,7 @@ class JsonFixtureTest extends TestCase
     public function itReturnsTheBodyAsAStream()
     {
 
-        $fixture = new JsonFixture(HttpMethod::GET, [], json_encode(['data' => ['foo' => 'bar']]));
+        $fixture = new JsonFixture(HttpStatus::OK, [], json_encode(['data' => ['foo' => 'bar']]));
 
         $this->assertInstanceOf(StreamInterface::class, $fixture->getBody());
     }
@@ -41,7 +41,7 @@ class JsonFixtureTest extends TestCase
     public function itCanReplaceAValueByArrayKey()
     {
 
-        $fixture = new JsonFixture(HttpMethod::GET, [], json_encode(['data' => ['foo' => 'bar']]));
+        $fixture = new JsonFixture(HttpStatus::OK, [], json_encode(['data' => ['foo' => 'bar']]));
 
         $fixture['data.foo'] = 'baz';
 
@@ -59,7 +59,7 @@ class JsonFixtureTest extends TestCase
     {
 
         $payload = ['data' => ['foo' => 'bar']];
-        $fixture = new JsonFixture(HttpMethod::GET, [], json_encode($payload));
+        $fixture = new JsonFixture(HttpStatus::OK, [], json_encode($payload));
 
         $this->assertSame($payload, $fixture->asArray());
     }
@@ -68,10 +68,12 @@ class JsonFixtureTest extends TestCase
     public function itCanForgetAnArrayKey()
     {
 
-        $fixture = new JsonFixture(HttpMethod::GET, [], json_encode(['data' => [
-            'foo' => 'bar',
-            'baz' => 'qux',
-        ]]));
+        $fixture = new JsonFixture(HttpStatus::OK, [], json_encode([
+            'data' => [
+                'foo' => 'bar',
+                'baz' => 'qux',
+            ],
+        ]));
 
         $fixture->forget('data.foo');
         unset($fixture['data.baz']);
@@ -87,7 +89,7 @@ class JsonFixtureTest extends TestCase
     public function itCanGetASetOfValuesFromTheBody()
     {
 
-        $fixture = new JsonFixture(HttpMethod::GET, [], json_encode([
+        $fixture = new JsonFixture(HttpStatus::OK, [], json_encode([
             'foo' => 'bar',
             'baz' => 'qux',
             'a' => ['b' => 'c'],
@@ -105,7 +107,7 @@ class JsonFixtureTest extends TestCase
     public function itCanCheckIfTheBodyContainsAKey()
     {
 
-        $fixture = new JsonFixture(HttpMethod::GET, [], json_encode(['data' => ['foo' => 'bar']]));
+        $fixture = new JsonFixture(HttpStatus::OK, [], json_encode(['data' => ['foo' => 'bar']]));
 
         $this->assertTrue($fixture->has('data.foo'));
         $this->assertFalse(isset($fixture['data.missing']));
@@ -116,6 +118,19 @@ class JsonFixtureTest extends TestCase
     {
 
         $body = json_encode(['data' => ['foo' => 'bar']]);
-        $this->assertSame($body, (string) new JsonFixture(HttpMethod::GET, [], $body));
+        $this->assertSame($body, (string) new JsonFixture(HttpStatus::OK, [], $body));
+    }
+
+    /** @test */
+    public function itCanInstantiatedFromTheDecoratedWithMethods() : void
+    {
+
+        $fixture = new JsonFixture(HttpStatus::OK, ['foo' => 'bar'], json_encode(['data' => ['foo' => 'bar']]));
+        $response = $fixture->withoutHeader('foo');
+        $response = $response->withStatus(HttpStatus::NOT_MODIFIED);
+
+        $this->assertFalse($response->hasHeader('foo'));
+        $this->assertEquals(HttpStatus::NOT_MODIFIED, $response->getStatusCode());
+        $this->assertNotSame($fixture, $response);
     }
 }
