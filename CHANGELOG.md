@@ -4,6 +4,20 @@ All notable changes to `Muzzle` will be documented in this file.
 
 Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) principles.
 
+## [0.3.2] - 2019-01-03
+
+### Added
+- Nothing
+
+### Fixed
+- updated `Assert::assertArraysMatch` failure messages to give more details
+
+### Removed
+- Nothing
+
+### Security
+- Nothing
+
 ## [0.3.1] - 2018-12-06
 
 ### Added
