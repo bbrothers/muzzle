@@ -4,6 +4,7 @@ namespace Muzzle\Assertions;
 
 use Muzzle\CliFormatter;
 use PHPUnit\Framework\Assert as PHPUnit;
+use PHPUnit\Framework\Constraint\IsType;
 use function Muzzle\is_regex;
 
 class Assert
@@ -16,10 +17,17 @@ class Assert
             PHPUnit::assertArrayHasKey(
                 $key,
                 $actual,
-                "The array does not contain contain the expected key [{$key}]."
+                "Did not find the expected key [{$key}] in the provided content:" . PHP_EOL
+                . CliFormatter::format($actual)
             );
 
             if (is_regex($value)) {
+                PHPUnit::assertInternalType(
+                    IsType::TYPE_SCALAR,
+                    $actual[$key],
+                    "Cannot match pattern [{$value}] against non-string value:" . PHP_EOL
+                    . CliFormatter::format($actual[$key])
+                );
                 PHPUnit::assertRegExp($value, $actual[$key]);
                 continue;
             }
