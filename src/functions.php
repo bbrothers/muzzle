@@ -61,3 +61,18 @@ function is_json($value) : bool
     json_decode($value);
     return json_last_error() === JSON_ERROR_NONE;
 }
+
+/**
+ * Returns a regex pattern to see if a list of items appear in any order.
+ *
+ * @param string ...$options
+ * @return string
+ */
+function in_any_order(string ...$options) : string
+{
+
+    return sprintf('/%s/', implode('', array_map(function ($field) {
+
+        return "(?=.*{$field})";
+    }, $options)));
+}
