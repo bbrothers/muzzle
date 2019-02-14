@@ -79,4 +79,19 @@ class FunctionsTest extends TestCase
         $this->assertTrue(is_json($valid));
         $this->assertFalse(is_json($invalid));
     }
+
+    /** @test */
+    public function itReturnsARegexPatternToSeeIfAListOfItemsAppearInAnyOrder() : void
+    {
+
+        $items = ['foo', 'bar', 'baz'];
+        $shuffle = $items;
+        shuffle($shuffle);
+        $subject = implode(',', $shuffle);
+
+        $pattern = in_any_order(...$items);
+
+        $this->assertEquals('/(?=.*foo)(?=.*bar)(?=.*baz)/', $pattern);
+        $this->assertRegExp($pattern, $subject);
+    }
 }
