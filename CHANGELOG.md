@@ -4,6 +4,22 @@ All notable changes to `Muzzle` will be documented in this file.
 
 Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) principles.
 
+## [0.3.3] - 2019-02-14
+
+### Added
+- a basic implementation of an `HtmlFixture` with `DomDocument` querying and replace
+- `in_any_order` helper function to produce a quick regex pattern for comparing a list in any order
+
+### Fixed
+- fixed issue where the mutated body of a fixture was not passed to the new response object when
+    a `with` method was called (e.g. `$fixture->withHeader('foo', 'bar')`)
+
+### Removed
+- Nothing
+
+### Security
+- Nothing
+
 ## [0.3.2] - 2019-01-03
 
 ### Added
