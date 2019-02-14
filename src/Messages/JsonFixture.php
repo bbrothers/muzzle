@@ -3,54 +3,22 @@
 namespace Muzzle\Messages;
 
 use ArrayAccess;
-use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Arr;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 use function GuzzleHttp\Psr7\stream_for;
 
-class JsonFixture implements ResponseInterface, ArrayAccess
+/**
+ * @method static Fixture|JsonFixture fromResponse(ResponseInterface $response)
+ * @method static Fixture|JsonFixture fromBaseResponse(ResponseInterface $response)
+ */
+class JsonFixture extends AbstractFixture implements ArrayAccess
 {
-
-    use ResponseDecorator {
-        __construct as initialize;
-    }
 
     /**
      * @var array
      */
-    private $body = [];
-
-    /**
-     * @param int $status                                Status code
-     * @param array $headers                             Response headers
-     * @param string|null|resource|StreamInterface $body Response body
-     * @param string $version                            Protocol version
-     * @param string|null $reason                        Reason phrase
-     */
-    public function __construct(
-        $status = 200,
-        array $headers = [],
-        $body = null,
-        $version = '1.1',
-        $reason = null
-    ) {
-
-        $this->initialize(new Response($status, $headers, $body, $version, $reason));
-        $this->withBody($this->response->getBody());
-    }
-
-    public static function fromResponse(ResponseInterface $response) : JsonFixture
-    {
-
-        return new static($response->getStatusCode(), $response->getHeaders(), $response->getBody());
-    }
-
-    public static function fromBaseResponse(ResponseInterface $response) : JsonFixture
-    {
-
-        return static::fromResponse($response);
-    }
+    protected $body = [];
 
     public function getBody()
     {
@@ -93,7 +61,8 @@ class JsonFixture implements ResponseInterface, ArrayAccess
     public function set(string $key, $value) : JsonFixture
     {
 
-        $this->saveBody(Arr::set($this->body, $key, $value));
+        Arr::set($this->body, $key, $value);
+        $this->saveBody();
 
         return $this;
     }
@@ -109,6 +78,7 @@ class JsonFixture implements ResponseInterface, ArrayAccess
     {
 
         $withDots = array_combine($keys, array_map(function ($key) {
+
             return Arr::get($this->body, $key);
         }, $keys));
 
@@ -154,17 +124,5 @@ class JsonFixture implements ResponseInterface, ArrayAccess
     {
 
         $this->forget($offset);
-    }
-
-    public function __toString() : string
-    {
-
-        return (string) $this->getBody();
-    }
-
-    private function saveBody() : void
-    {
-
-        $this->initialize($this->response->withBody($this->getBody()));
     }
 }

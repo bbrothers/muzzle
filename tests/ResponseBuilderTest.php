@@ -2,7 +2,7 @@
 
 namespace Muzzle;
 
-use GuzzleHttp\Psr7\Response;
+use Muzzle\Messages\HtmlFixture;
 use Muzzle\Messages\JsonFixture;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
@@ -60,6 +60,22 @@ class ResponseBuilderTest extends TestCase
         $fixture = ResponseBuilder::fromFixture('response.json');
 
         $this->assertInstanceOf(JsonFixture::class, $fixture);
+    }
+
+    /** @test */
+    public function itCanCreateAnHtmlFixture()
+    {
+
+        $data = '<span>some html</span>';
+        $vfs = new FileSystem;
+        $vfs->createDirectory('/fixtures');
+
+        file_put_contents($vfs->path('fixtures/response.html'), $data);
+        ResponseBuilder::setFixtureDirectory($vfs->path('fixtures'));
+
+        $fixture = ResponseBuilder::fromFixture('response.html');
+
+        $this->assertInstanceOf(HtmlFixture::class, $fixture);
     }
 
     /** @test */
