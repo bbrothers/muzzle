@@ -133,4 +133,17 @@ class JsonFixtureTest extends TestCase
         $this->assertEquals(HttpStatus::NOT_MODIFIED, $response->getStatusCode());
         $this->assertNotSame($fixture, $response);
     }
+
+    /** @test */
+    public function itWillRetainChangesWhenCallingWithMethods() : void
+    {
+
+        $fixture = new JsonFixture(HttpStatus::OK, ['foo' => 'bar'], json_encode(['data' => ['foo' => 'bar']]));
+        $fixture->set('data.foo', 'baz');
+        $response = $fixture->withoutHeader('foo');
+
+        $this->assertFalse($response->hasHeader('foo'));
+        $this->assertEquals('baz', $response->get('data.foo'), 'The modified value was not retained.');
+        $this->assertNotSame($fixture, $response);
+    }
 }
