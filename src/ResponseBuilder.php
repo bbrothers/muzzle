@@ -4,6 +4,8 @@ namespace Muzzle;
 
 use GuzzleHttp\Psr7\Response;
 use Muzzle\Messages\DecodableResponse;
+use Muzzle\Messages\Fixture;
+use Muzzle\Messages\HtmlFixture;
 use Muzzle\Messages\JsonFixture;
 use Psr\Http\Message\ResponseInterface;
 
@@ -49,13 +51,20 @@ class ResponseBuilder
 
         return (new static($status, $headers))
             ->setBodyFromFixture($fixture)
-            ->toJsonFixture();
+            ->toFixture();
     }
 
-    public function toJsonFixture() : JsonFixture
+    /**
+     * @return Fixture|JsonFixture|HtmlFixture
+     */
+    public function toFixture() : Fixture
     {
 
-        return new JsonFixture($this->status, $this->headers, $this->body);
+        if (is_json($this->body)) {
+            return new JsonFixture($this->status, $this->headers, $this->body);
+        }
+
+        return new HtmlFixture($this->status, $this->headers, $this->body);
     }
 
 
@@ -104,7 +113,7 @@ class ResponseBuilder
     public function setBodyFromFixture(string $path) : ResponseBuilder
     {
 
-        $this->body = fopen(static::$fixturePath . ltrim($path, '/'), 'r');
+        $this->body = file_get_contents(static::$fixturePath . ltrim($path, '/'));
 
         return $this;
     }
