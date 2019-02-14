@@ -62,6 +62,8 @@ class JsonFixture implements ResponseInterface, ArrayAccess
     {
 
         $this->body = json_decode($body, true);
+        $this->saveBody();
+
         return $this;
     }
 
@@ -91,7 +93,7 @@ class JsonFixture implements ResponseInterface, ArrayAccess
     public function set(string $key, $value) : JsonFixture
     {
 
-        Arr::set($this->body, $key, $value);
+        $this->saveBody(Arr::set($this->body, $key, $value));
 
         return $this;
     }
@@ -100,6 +102,7 @@ class JsonFixture implements ResponseInterface, ArrayAccess
     {
 
         Arr::forget($this->body, $key);
+        $this->saveBody();
     }
 
     public function only(array $keys) : array
@@ -157,5 +160,11 @@ class JsonFixture implements ResponseInterface, ArrayAccess
     {
 
         return (string) $this->getBody();
+    }
+
+    private function saveBody() : void
+    {
+
+        $this->initialize($this->response->withBody($this->getBody()));
     }
 }
