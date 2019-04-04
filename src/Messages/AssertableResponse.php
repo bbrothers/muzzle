@@ -60,7 +60,10 @@ class AssertableResponse extends DecodableResponse
         );
 
         if (! is_null($uri)) {
-            PHPUnit::assertContains(app('url')->to($uri), $this->getHeader('Location'), '', true);
+            $locationTo = app('url')->to($uri);
+            foreach ($this->getHeader('Location') as $location) {
+                PHPUnit::assertEqualsIgnoringCase($locationTo, $location);
+            }
         }
 
         return $this;

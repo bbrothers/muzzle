@@ -25,7 +25,7 @@ class BodyMatchesTest extends TestCase
         );
 
         $this->expectException(ExpectationFailedException::class);
-        $expectation($actual, new Muzzle);
+        $expectation($actual);
     }
 
     /** @test */
@@ -39,12 +39,9 @@ class BodyMatchesTest extends TestCase
                 ->build()
         );
 
-        $expectation($assertable, new Muzzle);
+        $expectation($assertable);
         $this->expectException(ExpectationFailedException::class);
-        $expectation(
-            $assertable->withBody(stream_for('test not matching')),
-            new Muzzle
-        );
+        $expectation($assertable->withBody(stream_for('test not matching')));
     }
 
     /** @test */
@@ -60,12 +57,9 @@ class BodyMatchesTest extends TestCase
                 ->build()
         );
 
-        $expectation($assertable, new Muzzle);
+        $expectation($assertable);
         $this->expectException(ExpectationFailedException::class);
-        $expectation(
-            $assertable->withBody(stream_for('test not matching')),
-            new Muzzle
-        );
+        $expectation($assertable->withBody(stream_for('test not matching')));
     }
 
     /** @test */
@@ -80,13 +74,10 @@ class BodyMatchesTest extends TestCase
                 ->setBody('test body')
                 ->build()
         );
-        $expectation($assertable, new Muzzle);
-        $expectation($assertable->withBody(stream_for('test box')), new Muzzle);
+        $expectation($assertable);
+        $expectation($assertable->withBody(stream_for('test box')));
         $this->expectException(ExpectationFailedException::class);
-        $expectation(
-            $assertable->withBody(stream_for('test not matching')),
-            new Muzzle
-        );
+        $expectation($assertable->withBody(stream_for('test not matching')));
     }
 
     /** @test */
@@ -101,12 +92,9 @@ class BodyMatchesTest extends TestCase
                 ->setBody($body)
                 ->build()
         );
-        $expectation($assertable, new Muzzle);
+        $expectation($assertable);
         $this->expectException(ExpectationFailedException::class);
-        $expectation(
-            $assertable->withBody(stream_for('{"data" : [{"foo": {"bar": "qux"}}]}')),
-            new Muzzle
-        );
+        $expectation($assertable->withBody(stream_for('{"data" : [{"foo": {"bar": "qux"}}]}')));
     }
 
     /** @test */
@@ -121,12 +109,9 @@ class BodyMatchesTest extends TestCase
                 ->setBody('{"data" : [{"foo": {"bar": "baz"}}]}')
                 ->build()
         );
-        $expectation($assertable, new Muzzle);
+        $expectation($assertable);
         $this->expectException(ExpectationFailedException::class);
-        $expectation(
-            $assertable->withBody(stream_for('{"data" : [{"foo": {"bar": "qux"}}]}')),
-            new Muzzle
-        );
+        $expectation($assertable->withBody(stream_for('{"data" : [{"foo": {"bar": "qux"}}]}')));
     }
 
     /** @test */
@@ -141,15 +126,9 @@ class BodyMatchesTest extends TestCase
                 ->setBody('{"data" : [{"foo": {"bar": "baz"}}]}')
                 ->build()
         );
-        $expectation($assertable, new Muzzle);
-        $expectation(
-            $assertable->withBody(stream_for('{"data" : [{"foo": {"bar": "buzz"}}]}')),
-            new Muzzle
-        );
+        $expectation($assertable);
+        $expectation($assertable->withBody(stream_for('{"data" : [{"foo": {"bar": "buzz"}}]}')));
         $this->expectException(ExpectationFailedException::class);
-        $expectation(
-            $assertable->withBody(stream_for('{"data" : [{"foo": {"bar": "qux"}}]}')),
-            new Muzzle
-        );
+        $expectation($assertable->withBody(stream_for('{"data" : [{"foo": {"bar": "qux"}}]}')));
     }
 }

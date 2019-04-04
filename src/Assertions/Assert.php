@@ -4,7 +4,6 @@ namespace Muzzle\Assertions;
 
 use Muzzle\CliFormatter;
 use PHPUnit\Framework\Assert as PHPUnit;
-use PHPUnit\Framework\Constraint\IsType;
 use function Muzzle\is_regex;
 
 class Assert
@@ -22,8 +21,7 @@ class Assert
             );
 
             if (is_regex($value)) {
-                PHPUnit::assertInternalType(
-                    IsType::TYPE_SCALAR,
+                PHPUnit::assertIsScalar(
                     $actual[$key],
                     "Cannot match pattern [{$value}] against non-string value:" . PHP_EOL
                     . CliFormatter::format($actual[$key])

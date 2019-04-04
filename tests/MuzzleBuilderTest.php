@@ -178,6 +178,6 @@ class MuzzleBuilderTest extends TestCase
 
         $stack = $muzzle->getConfig('handler');
 
-        $this->assertContains(Decodable::class, (string) $stack);
+        $this->assertStringContainsString(Decodable::class, (string) $stack);
     }
 }

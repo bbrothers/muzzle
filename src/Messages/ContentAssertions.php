@@ -2,18 +2,22 @@
 
 namespace Muzzle\Messages;
 
+use DMS\PHPUnitExtensions\ArraySubset\ArraySubsetAsserts;
+use Exception;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Muzzle\CliFormatter;
 use PHPUnit\Framework\Assert as PHPUnit;
+use Psr\Http\Message\StreamInterface;
 
 trait ContentAssertions
 {
+    use ArraySubsetAsserts;
 
     /**
      * Gets the body of the message.
      *
-     * @return \Psr\Http\Message\StreamInterface Returns the body as a stream.
+     * @return StreamInterface Returns the body as a stream.
      */
     abstract public function getBody();
 
@@ -33,7 +37,7 @@ trait ContentAssertions
     public function assertSee($value) : self
     {
 
-        PHPUnit::assertContains($value, (string) $this->getBody());
+        PHPUnit::assertStringContainsString($value, (string) $this->getBody());
 
         return $this;
     }
@@ -47,7 +51,7 @@ trait ContentAssertions
     public function assertSeeText($value) : self
     {
 
-        PHPUnit::assertContains($value, strip_tags((string) $this->getBody()));
+        PHPUnit::assertStringContainsString($value, strip_tags((string) $this->getBody()));
 
         return $this;
     }
@@ -61,7 +65,7 @@ trait ContentAssertions
     public function assertDoNotSee($value) : self
     {
 
-        PHPUnit::assertNotContains($value, (string) $this->getBody());
+        PHPUnit::assertStringNotContainsString($value, (string) $this->getBody());
 
         return $this;
     }
@@ -75,7 +79,7 @@ trait ContentAssertions
     public function assertDoNotSeeText($value) : self
     {
 
-        PHPUnit::assertNotContains($value, strip_tags((string) $this->getBody()));
+        PHPUnit::assertStringNotContainsString($value, strip_tags((string) $this->getBody()));
 
         return $this;
     }
@@ -85,11 +89,12 @@ trait ContentAssertions
      *
      * @param  array $data
      * @return $this
+     * @throws Exception
      */
     public function assertJson(array $data) : self
     {
 
-        PHPUnit::assertArraySubset(
+        self::assertArraySubset(
             $data,
             $this->decode(),
             false,
@@ -192,6 +197,7 @@ trait ContentAssertions
      * @param  array|null $structure
      * @param  array|null $responseData
      * @return $this
+     * @throws Exception
      */
     public function assertJsonStructure(array $structure = null, array $responseData = null) : self
     {
@@ -206,7 +212,7 @@ trait ContentAssertions
 
         foreach ($structure as $key => $value) {
             if (is_array($value) && $key === '*') {
-                PHPUnit::assertInternalType('array', $responseData);
+                PHPUnit::assertIsArray($responseData);
 
                 foreach ($responseData as $responseDataItem) {
                     $this->assertJsonStructure($structure['*'], $responseDataItem);
@@ -232,7 +238,7 @@ trait ContentAssertions
     }
 
     /**
-     * @param string|\Psr\Http\Message\StreamInterface $body
+     * @param string|StreamInterface $body
      * @return $this
      */
     public function assertBodyEquals($body) : self
