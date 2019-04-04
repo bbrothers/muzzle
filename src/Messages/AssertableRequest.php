@@ -2,7 +2,6 @@
 
 namespace Muzzle\Messages;
 
-use DMS\PHPUnitExtensions\ArraySubset\ArraySubsetAsserts;
 use Exception;
 use GuzzleHttp\Psr7;
 use Illuminate\Support\Str;
@@ -16,7 +15,6 @@ class AssertableRequest implements RequestInterface
     use ContentAssertions;
     use RequestDecorator;
     use JsonMessage;
-    use ArraySubsetAsserts;
 
     /**
      * Asserts that the request contains the given header and equals the optional value.
@@ -48,7 +46,7 @@ class AssertableRequest implements RequestInterface
                 implode(', ', $expected)
             );
 
-            static::assertArraySubset($expected, $actual, $message);
+            self::assertArraySubset($expected, $actual, $message);
         }
 
         return $this;
@@ -275,7 +273,7 @@ class AssertableRequest implements RequestInterface
     {
 
         $query = Psr7\parse_query($this->getUri()->getQuery());
-        static::assertArraySubset($values, $query, false, (function ($expected, $actual) {
+        self::assertArraySubset($values, $query, false, (function ($expected, $actual) {
 
             return 'Could not find ' . PHP_EOL
                    . CliFormatter::format($expected) . PHP_EOL
