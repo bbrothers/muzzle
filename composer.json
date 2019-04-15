@@ -27,7 +27,7 @@
         "hamcrest/hamcrest-php": "^2.0",
         "illuminate/support": "^5.5",
         "myclabs/php-enum": "^1.5",
-        "phpunit/phpunit": "^8.0",
+        "phpunit/phpunit": "~8.0.0",
         "symfony/var-dumper": "^4.0",
         "dms/phpunit-arraysubset-asserts": "^0.1.0"
     },
