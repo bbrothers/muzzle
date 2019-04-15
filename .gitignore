@@ -1,8 +1,3 @@
 build
 composer.lock
 vendor
-.idea
-.phpunit.result.cache
-tests/.phpunit.result.cache
-tests/Assertions/.phpunit.result.cache
-tests/Messages/.phpunit.result.cache
