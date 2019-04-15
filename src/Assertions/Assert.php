@@ -2,18 +2,21 @@
 
 namespace Muzzle\Assertions;
 
+use DMS\PHPUnitExtensions\ArraySubset\ArraySubsetAsserts;
 use Muzzle\CliFormatter;
-use PHPUnit\Framework\Assert as PHPUnit;
+use PHPUnit\Framework\Assert as PHPUnitAssert;
 use function Muzzle\is_regex;
 
-class Assert
+class Assert extends PHPUnitAssert
 {
+
+    use ArraySubsetAsserts;
 
     public static function assertArraysMatch(iterable $expected, array $actual) : void
     {
 
         foreach ($expected as $key => $value) {
-            PHPUnit::assertArrayHasKey(
+            static::assertArrayHasKey(
                 $key,
                 $actual,
                 "Did not find the expected key [{$key}] in the provided content:" . PHP_EOL
@@ -21,12 +24,12 @@ class Assert
             );
 
             if (is_regex($value)) {
-                PHPUnit::assertIsScalar(
+                static::assertIsScalar(
                     $actual[$key],
                     "Cannot match pattern [{$value}] against non-string value:" . PHP_EOL
                     . CliFormatter::format($actual[$key])
                 );
-                PHPUnit::assertRegExp($value, $actual[$key]);
+                static::assertRegExp($value, $actual[$key]);
                 continue;
             }
 
@@ -35,7 +38,7 @@ class Assert
                 continue;
             }
 
-            PHPUnit::assertEquals(
+            static::assertEquals(
                 $value,
                 $actual[$key],
                 "The expected value for [{$key}]" . PHP_EOL

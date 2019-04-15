@@ -2,11 +2,12 @@
 
 namespace Muzzle\Messages;
 
+use DMS\PHPUnitExtensions\ArraySubset\ArraySubsetAsserts;
 use Exception;
 use GuzzleHttp\Psr7;
 use Illuminate\Support\Str;
+use Muzzle\Assertions\Assert;
 use Muzzle\CliFormatter;
-use PHPUnit\Framework\Assert as PHPUnit;
 use Psr\Http\Message\RequestInterface;
 
 class AssertableRequest implements RequestInterface
@@ -27,7 +28,7 @@ class AssertableRequest implements RequestInterface
     public function assertHeader($headerName, $value = null)
     {
 
-        PHPUnit::assertTrue(
+        Assert::assertTrue(
             $this->hasHeader($headerName),
             "Header [{$headerName}] not present on request."
         );
@@ -46,7 +47,7 @@ class AssertableRequest implements RequestInterface
                 implode(', ', $expected)
             );
 
-            self::assertArraySubset($expected, $actual, $message);
+            ArraySubsetAsserts::assertArraySubset($expected, $actual, $message);
         }
 
         return $this;
@@ -61,7 +62,7 @@ class AssertableRequest implements RequestInterface
     public function assertRequestTarget($target)
     {
 
-        PHPUnit::assertEquals($target, $this->getRequestTarget());
+        Assert::assertEquals($target, $this->getRequestTarget());
 
         return $this;
     }
@@ -75,7 +76,7 @@ class AssertableRequest implements RequestInterface
     public function assertMethod(string $method)
     {
 
-        PHPUnit::assertEquals(
+        Assert::assertEquals(
             strtoupper($method),
             $this->getMethod(),
             sprintf(
@@ -98,7 +99,7 @@ class AssertableRequest implements RequestInterface
     public function assertUriScheme(string $scheme)
     {
 
-        PHPUnit::assertEquals($scheme, $this->getUri()->getScheme());
+        Assert::assertEquals($scheme, $this->getUri()->getScheme());
 
         return $this;
     }
@@ -112,7 +113,7 @@ class AssertableRequest implements RequestInterface
     public function assertUriAuthority(string $authority)
     {
 
-        PHPUnit::assertEquals($authority, $this->getUri()->getAuthority());
+        Assert::assertEquals($authority, $this->getUri()->getAuthority());
 
         return $this;
     }
@@ -126,7 +127,7 @@ class AssertableRequest implements RequestInterface
     public function assertUriUserInfo(string $userInfo)
     {
 
-        PHPUnit::assertEquals($userInfo, $this->getUri()->getUserInfo());
+        Assert::assertEquals($userInfo, $this->getUri()->getUserInfo());
 
         return $this;
     }
@@ -140,7 +141,7 @@ class AssertableRequest implements RequestInterface
     public function assertUriHost(string $host)
     {
 
-        PHPUnit::assertEquals($host, $this->getUri()->getHost());
+        Assert::assertEquals($host, $this->getUri()->getHost());
 
         return $this;
     }
@@ -154,7 +155,7 @@ class AssertableRequest implements RequestInterface
     public function assertUriPort(?int $port = null)
     {
 
-        PHPUnit::assertEquals($port, $this->getUri()->getPort());
+        Assert::assertEquals($port, $this->getUri()->getPort());
 
         return $this;
     }
@@ -170,7 +171,7 @@ class AssertableRequest implements RequestInterface
     public function assertUriPath(string $pattern)
     {
 
-        PHPUnit::assertTrue(
+        Assert::assertTrue(
             Str::is($pattern, $this->getUri()->getPath()),
             sprintf(
                 'The path [%s] does not match the expected pattern [%s].',
@@ -185,7 +186,7 @@ class AssertableRequest implements RequestInterface
     public function assertUriPathMatches(string $pattern) : self
     {
 
-        PHPUnit::assertRegExp(
+        Assert::assertRegExp(
             $pattern,
             $this->getUri()->getPath(),
             sprintf(
@@ -208,7 +209,7 @@ class AssertableRequest implements RequestInterface
     public function assertUriFragment(string $fragment)
     {
 
-        PHPUnit::assertEquals($fragment, $this->getUri()->getFragment());
+        Assert::assertEquals($fragment, $this->getUri()->getFragment());
 
         return $this;
     }
@@ -223,7 +224,7 @@ class AssertableRequest implements RequestInterface
     public function assertUriQuery(string $query)
     {
 
-        PHPUnit::assertEquals($query, $this->getUri()->getQuery());
+        Assert::assertEquals($query, $this->getUri()->getQuery());
 
         return $this;
     }
@@ -238,7 +239,7 @@ class AssertableRequest implements RequestInterface
     {
 
         $query = Psr7\parse_query($this->getUri()->getQuery());
-        PHPUnit::assertArrayHasKey($key, $query);
+        Assert::assertArrayHasKey($key, $query);
 
         return $this;
     }
@@ -253,7 +254,7 @@ class AssertableRequest implements RequestInterface
     {
 
         $query = Psr7\parse_query($this->getUri()->getQuery());
-        PHPUnit::assertArrayNotHasKey($key, $query, sprintf(
+        Assert::assertArrayNotHasKey($key, $query, sprintf(
             'Could not find [%s] in the query parameters: %s',
             $key,
             CliFormatter::format($query)
@@ -273,7 +274,7 @@ class AssertableRequest implements RequestInterface
     {
 
         $query = Psr7\parse_query($this->getUri()->getQuery());
-        self::assertArraySubset($values, $query, false, (function ($expected, $actual) {
+        ArraySubsetAsserts::assertArraySubset($values, $query, false, (function ($expected, $actual) {
 
             return 'Could not find ' . PHP_EOL
                    . CliFormatter::format($expected) . PHP_EOL
@@ -287,7 +288,7 @@ class AssertableRequest implements RequestInterface
     public function assertUriEquals(Psr7\Uri $uri)
     {
 
-        PHPUnit::assertEquals($this->getUri(), $uri, sprintf(
+        Assert::assertEquals($this->getUri(), $uri, sprintf(
             'Failed asserting %s equals %s',
             urldecode($this->getUri()),
             urldecode($uri)

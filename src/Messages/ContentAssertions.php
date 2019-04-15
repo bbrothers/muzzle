@@ -2,17 +2,15 @@
 
 namespace Muzzle\Messages;
 
-use DMS\PHPUnitExtensions\ArraySubset\ArraySubsetAsserts;
 use Exception;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use Muzzle\Assertions\Assert;
 use Muzzle\CliFormatter;
-use PHPUnit\Framework\Assert as PHPUnit;
 use Psr\Http\Message\StreamInterface;
 
 trait ContentAssertions
 {
-    use ArraySubsetAsserts;
 
     /**
      * Gets the body of the message.
@@ -37,7 +35,7 @@ trait ContentAssertions
     public function assertSee($value) : self
     {
 
-        PHPUnit::assertStringContainsString($value, (string) $this->getBody());
+        Assert::assertStringContainsString($value, (string) $this->getBody());
 
         return $this;
     }
@@ -51,7 +49,7 @@ trait ContentAssertions
     public function assertSeeText($value) : self
     {
 
-        PHPUnit::assertStringContainsString($value, strip_tags((string) $this->getBody()));
+        Assert::assertStringContainsString($value, strip_tags((string) $this->getBody()));
 
         return $this;
     }
@@ -65,7 +63,7 @@ trait ContentAssertions
     public function assertDoNotSee($value) : self
     {
 
-        PHPUnit::assertStringNotContainsString($value, (string) $this->getBody());
+        Assert::assertStringNotContainsString($value, (string) $this->getBody());
 
         return $this;
     }
@@ -79,7 +77,7 @@ trait ContentAssertions
     public function assertDoNotSeeText($value) : self
     {
 
-        PHPUnit::assertStringNotContainsString($value, strip_tags((string) $this->getBody()));
+        Assert::assertStringNotContainsString($value, strip_tags((string) $this->getBody()));
 
         return $this;
     }
@@ -94,7 +92,7 @@ trait ContentAssertions
     public function assertJson(array $data) : self
     {
 
-        self::assertArraySubset(
+        Assert::assertArraySubset(
             $data,
             $this->decode(),
             false,
@@ -134,7 +132,7 @@ trait ContentAssertions
 
         $actual = json_encode(Arr::sortRecursive((array) $this->decode()));
 
-        PHPUnit::assertEquals(json_encode(Arr::sortRecursive($data)), $actual);
+        Assert::assertEquals(json_encode(Arr::sortRecursive($data)), $actual);
 
         return $this;
     }
@@ -153,7 +151,7 @@ trait ContentAssertions
         foreach (Arr::sortRecursive($data) as $key => $value) {
             $expected = substr(json_encode([$key => $value]), 1, -1);
 
-            PHPUnit::assertTrue(
+            Assert::assertTrue(
                 Str::contains($actual, $expected),
                 'Unable to find JSON fragment: ' . PHP_EOL . PHP_EOL .
                 "[{$expected}]" . PHP_EOL . PHP_EOL .
@@ -179,7 +177,7 @@ trait ContentAssertions
         foreach (Arr::sortRecursive($data) as $key => $value) {
             $expected = substr(json_encode([$key => $value]), 1, -1);
 
-            PHPUnit::assertFalse(
+            Assert::assertFalse(
                 Str::contains($actual, $expected),
                 'Found unexpected JSON fragment: ' . PHP_EOL . PHP_EOL .
                 "[{$expected}]" . PHP_EOL . PHP_EOL .
@@ -212,13 +210,13 @@ trait ContentAssertions
 
         foreach ($structure as $key => $value) {
             if (is_array($value) && $key === '*') {
-                PHPUnit::assertIsArray($responseData);
+                Assert::assertIsArray($responseData);
 
                 foreach ($responseData as $responseDataItem) {
                     $this->assertJsonStructure($structure['*'], $responseDataItem);
                 }
             } elseif (is_array($value)) {
-                PHPUnit::assertArrayHasKey($key, $responseData, sprintf(
+                Assert::assertArrayHasKey($key, $responseData, sprintf(
                     'Could not find key [%s] within data subset: %s',
                     $key,
                     CliFormatter::format($responseData)
@@ -226,7 +224,7 @@ trait ContentAssertions
 
                 $this->assertJsonStructure($structure[$key], $responseData[$key]);
             } else {
-                PHPUnit::assertArrayHasKey($value, $responseData, sprintf(
+                Assert::assertArrayHasKey($value, $responseData, sprintf(
                     'Could not find key [%s] within data subset: %s',
                     $value,
                     CliFormatter::format($responseData)
@@ -246,7 +244,7 @@ trait ContentAssertions
 
         $body = (string) $body;
         if ($body !== '') {
-            PHPUnit::assertEquals($body, (string) $this->getBody());
+            Assert::assertEquals($body, (string) $this->getBody());
         }
 
         return $this;

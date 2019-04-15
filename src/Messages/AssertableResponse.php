@@ -2,7 +2,7 @@
 
 namespace Muzzle\Messages;
 
-use PHPUnit\Framework\Assert as PHPUnit;
+use Muzzle\Assertions\Assert;
 
 class AssertableResponse extends DecodableResponse
 {
@@ -18,7 +18,7 @@ class AssertableResponse extends DecodableResponse
     public function assertSuccessful()
     {
 
-        PHPUnit::assertTrue(
+        Assert::assertTrue(
             $this->isSuccessful(),
             "Response status code [{$this->getStatusCode()}] is not a successful status code."
         );
@@ -37,7 +37,7 @@ class AssertableResponse extends DecodableResponse
 
         $actual = $this->getStatusCode();
 
-        PHPUnit::assertTrue(
+        Assert::assertTrue(
             $actual === $status,
             "Expected status code {$status} but received {$actual}."
         );
@@ -54,7 +54,7 @@ class AssertableResponse extends DecodableResponse
     public function assertRedirect($uri = null)
     {
 
-        PHPUnit::assertTrue(
+        Assert::assertTrue(
             $this->isRedirect(),
             "Response status code [{$this->getStatusCode()}] is not a redirect status code."
         );
@@ -62,7 +62,7 @@ class AssertableResponse extends DecodableResponse
         if (! is_null($uri)) {
             $locationTo = app('url')->to($uri);
             foreach ($this->getHeader('Location') as $location) {
-                PHPUnit::assertEqualsIgnoringCase($locationTo, $location);
+                Assert::assertEqualsIgnoringCase($locationTo, $location);
             }
         }
 
@@ -79,7 +79,7 @@ class AssertableResponse extends DecodableResponse
     public function assertHeader($headerName, $value = null)
     {
 
-        PHPUnit::assertTrue(
+        Assert::assertTrue(
             $this->hasHeader($headerName),
             "Header [{$headerName}] not present on response."
         );
@@ -93,7 +93,7 @@ class AssertableResponse extends DecodableResponse
                 implode(', ', $actual),
                 $value
             );
-            PHPUnit::assertContains($value, $actual, $message);
+            Assert::assertContains($value, $actual, $message);
         }
 
         return $this;
