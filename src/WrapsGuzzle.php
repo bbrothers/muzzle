@@ -4,8 +4,6 @@ namespace Muzzle;
 
 use GuzzleHttp\Promise\PromiseInterface;
 use Muzzle\Messages\AssertableResponse;
-use OutOfBoundsException;
-use PHPUnit\Framework\Assert as PHPUnit;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\UriInterface;

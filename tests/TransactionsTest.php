@@ -180,4 +180,12 @@ class TransactionsTest extends TestCase
 
         $this->assertSame($transactions, $instance->transactions());
     }
+
+    /** @test */
+    public function itWillThrowAnExceptionIfANonTransactionElementIsPassedInTheConstructor() : void
+    {
+
+        $this->expectException(NotATransaction::class);
+        new Transactions(['foo']);
+    }
 }

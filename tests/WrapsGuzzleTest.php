@@ -2,15 +2,12 @@
 
 namespace Muzzle;
 
-use BadMethodCallException;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Promise\Promise;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use InvalidArgumentException;
-use OutOfBoundsException;
-use PHPUnit\Framework\AssertionFailedError;
 use PHPUnit\Framework\TestCase;
 
 class WrapsGuzzleTest extends TestCase

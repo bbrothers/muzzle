@@ -4,7 +4,6 @@ namespace Muzzle\Assertions;
 
 use Muzzle\CliFormatter;
 use Muzzle\Messages\AssertableRequest;
-use PHPUnit\Framework\Assert as PHPUnit;
 
 class QueryEquals implements Assertion
 {
@@ -27,7 +26,7 @@ class QueryEquals implements Assertion
         parse_str($actual->getUri()->getQuery(), $query);
         ksort($query);
         ksort($expected);
-        PHPUnit::assertEquals(
+        Assert::assertEquals(
             $expected,
             $query,
             'The expected query' . PHP_EOL

@@ -3,7 +3,6 @@
 namespace Muzzle\Assertions;
 
 use Muzzle\Messages\AssertableRequest;
-use PHPUnit\Framework\Assert as PHPUnit;
 
 class MethodMatches implements Assertion
 {
@@ -22,7 +21,7 @@ class MethodMatches implements Assertion
     public function __invoke(AssertableRequest $actual) : void
     {
 
-        PHPUnit::assertArrayHasKey(
+        Assert::assertArrayHasKey(
             $actual->getMethod(),
             array_flip(array_map('strtoupper', $this->methods)),
             sprintf(

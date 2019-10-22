@@ -20,15 +20,16 @@
         }
     ],
     "require": {
-        "php": "~7.1",
+        "php": "~7.2",
         "ext-json": "*",
         "ext-dom": "*",
         "guzzlehttp/guzzle": "^6.3",
         "hamcrest/hamcrest-php": "^2.0",
         "illuminate/support": "^5.5",
         "myclabs/php-enum": "^1.5",
-        "phpunit/phpunit": "^7.1",
-        "symfony/var-dumper": "^4.0"
+        "phpunit/phpunit": "~8.0.0",
+        "symfony/var-dumper": "^4.0",
+        "dms/phpunit-arraysubset-asserts": "^0.1.0"
     },
     "require-dev": {
         "php-vfs/php-vfs": "^1.4",
